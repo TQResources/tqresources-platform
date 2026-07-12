@@ -1,0 +1,75 @@
+import type { Resource } from "../../types/resource";
+
+export const copperResources: Resource[] = [
+  {
+    id: "copper-cathode",
+    name: "Copper Cathode",
+    displayName: "Copper Cathode",
+    metal: "Copper",
+    form: "Cathode",
+    grade: "Grade A",
+    standard: "LME Grade A",
+    description:
+      "High-purity copper cathodes supplied for international trade and industrial use.",
+    typicalOrigins: ["China", "Africa", "South America"],
+    commonPacking: ["Bundled cathode sheets"],
+    commonTradeTerms: ["FOB", "CFR", "CIF"],
+    featured: true,
+    active: true,
+  },
+  {
+    id: "copper-ingot",
+    name: "Copper Ingot",
+    displayName: "Copper Ingot",
+    metal: "Copper",
+    form: "Ingot",
+    description:
+      "Copper ingots supplied according to purity, weight and customer specification.",
+    commonTradeTerms: ["FOB", "CFR", "CIF"],
+    featured: false,
+    active: true,
+  },
+  {
+    id: "copper-granules",
+    name: "Copper Granules",
+    displayName: "Copper Granules",
+    metal: "Copper",
+    form: "Granules",
+    description:
+      "Processed copper granules supplied according to purity, size and contamination requirements.",
+    commonPacking: ["Jumbo bags", "Bags on pallets"],
+    commonTradeTerms: ["FOB", "CFR", "CIF"],
+    featured: true,
+    active: true,
+  },
+  {
+    id: "berry-candy",
+    name: "Berry / Candy",
+    displayName: "Berry / Candy",
+    metal: "Copper",
+    form: "Scrap",
+    grade: "ISRI Berry / Candy",
+    standard: "ISRI",
+    description:
+      "Copper wire and heavy copper scrap traded according to agreed inspection and quality specifications.",
+    commonPacking: ["Loose", "Bales", "Jumbo bags"],
+    commonTradeTerms: ["FOB", "CFR", "CIF"],
+    featured: true,
+    active: true,
+  },
+  {
+    id: "birch-cliff",
+    name: "Birch / Cliff",
+    displayName: "Birch / Cliff",
+    metal: "Copper",
+    form: "Scrap",
+    grade: "ISRI Birch / Cliff",
+    standard: "ISRI",
+    description:
+      "Mixed copper wire and copper scrap supplied according to mutually agreed quality specifications.",
+    commonPacking: ["Loose", "Bales"],
+    commonTradeTerms: ["FOB", "CFR", "CIF"],
+    featured: true,
+    active: true,
+  },
+];

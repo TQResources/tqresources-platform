@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import Footer from "../components/Footer";
+import { company } from "../config/company";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -9,8 +11,29 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "TQ Resources",
-  description: "Global Non-Ferrous Metal Trading",
+  metadataBase: new URL(company.website),
+
+  title: {
+    default: `${company.brandName} | Global Metal Trading`,
+    template: `%s | ${company.brandName}`,
+  },
+
+  description: company.seo.description,
+
+  keywords: company.seo.keywords,
+
+  alternates: {
+    canonical: "/",
+  },
+
+  openGraph: {
+    title: `${company.brandName} | Global Metal Trading`,
+    description: company.seo.description,
+    url: company.website,
+    siteName: company.brandName,
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -23,8 +46,9 @@ export default function RootLayout({
       lang="en"
       className={`${manrope.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        {children}
+      <body className="flex min-h-full flex-col">
+        <div className="flex-1">{children}</div>
+        <Footer />
       </body>
     </html>
   );
