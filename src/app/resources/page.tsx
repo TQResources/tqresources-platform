@@ -16,8 +16,8 @@ const materials = [
     tagline: "Refined & Recycled Copper Resources",
     description:
       "Copper cathode, copper ingot, copper granules, Berry / Candy and Birch / Cliff.",
-    href: "",
-    available: false,
+    href: "/resources/copper",
+    available: true,
   },
   {
     name: "Zinc",

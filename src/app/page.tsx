@@ -19,7 +19,7 @@ const featuredResources = [
     description:
       "Copper cathode, copper ingot, copper granules, Berry / Candy and Birch / Cliff.",
     count: copperResources.filter((item) => item.active).length,
-    href: "/resources",
+    href: "/resources/copper",
   },
   {
     name: "Zinc",
