@@ -1,11 +1,85 @@
 import Header from "../../../components/Header";
 import { aluminumResources } from "../../../data/resources/aluminum";
 
-export default function AluminumPage() {
-  const activeMaterials = aluminumResources.filter(
-    (material) => material.active
-  );
+const recycledAluminum = aluminumResources.filter((material) =>
+  ["adc12", "aluminum-sow", "off-grade-aluminum-ingot", "ubc-ingot"].includes(
+    material.id
+  )
+);
 
+const aluminumScrap = aluminumResources.filter((material) =>
+  [
+    "zorba",
+    "tense",
+    "taint-tabor",
+    "twitch",
+    "ubc",
+    "6063-aluminum-scrap",
+  ].includes(material.id)
+);
+
+const semiFinishedMaterials = aluminumResources.filter((material) =>
+  ["aluminum-coil", "aluminum-sheet", "aluminum-plate"].includes(material.id)
+);
+
+const primaryAluminum = aluminumResources.filter(
+  (material) => material.id === "primary-aluminum-ingot"
+);
+
+const materialGroups = [
+  {
+    title: "Recycled Aluminum",
+    description:
+      "Secondary aluminum ingots and recycled aluminum materials supplied according to chemical composition, grade and customer requirements.",
+    materials: recycledAluminum,
+  },
+  {
+    title: "Aluminum Scrap",
+    description:
+      "Selected aluminum scrap and recycled materials supplied according to agreed cleanliness, recovery and quality specifications.",
+    materials: aluminumScrap,
+  },
+  {
+    title: "Semi-finished Materials",
+    description:
+      "Aluminum coil, sheet and plate supplied according to alloy, temper, thickness, dimensions and customer specifications.",
+    materials: semiFinishedMaterials,
+  },
+  {
+    title: "Primary Aluminum",
+    description:
+      "Primary aluminum ingots available upon customer request according to grade, brand and trading requirements.",
+    materials: primaryAluminum,
+  },
+];
+
+const supplyCapabilities = [
+  {
+    title: "Trade Terms",
+    items: ["FOB", "CFR", "CIF"],
+  },
+  {
+    title: "Packaging",
+    items: [
+      "Bundles",
+      "Bales",
+      "Loose Loading",
+      "Export Pallets",
+      "Wooden Cases",
+    ],
+  },
+  {
+    title: "Documentation",
+    items: [
+      "Commercial Invoice",
+      "Packing List",
+      "Bill of Lading",
+      "Certificate of Analysis",
+    ],
+  },
+];
+
+export default function AluminumPage() {
   return (
     <>
       <Header />
@@ -25,61 +99,129 @@ export default function AluminumPage() {
               Aluminum
             </p>
 
-            <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-tight tracking-tight text-[var(--text)] md:text-5xl">
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--text)] md:text-5xl">
               Aluminum Materials
             </h1>
 
-            <p className="mt-6 max-w-5xl text-[17px] leading-8 text-[var(--text-light)]">
-              Primary aluminum, alloy ingots and recycled aluminum materials
-              supplied through our international trading network.
+            <p className="mt-6 text-[17px] leading-8 text-[var(--text-light)]">
+              Reliable aluminum materials supplied for international
+              manufacturing, recycling and trading applications. Typical
+              specifications, chemical composition, packaging and documentation
+              are available upon request.
             </p>
           </div>
         </section>
 
-        {/* Material list */}
-        <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-20">
-            <div className="mb-10 flex flex-wrap items-end justify-between gap-5">
+        {/* Material groups */}
+        {materialGroups.map((group, groupIndex) => (
+          <section
+            key={group.title}
+            className={
+              groupIndex % 2 === 0
+                ? "bg-white"
+                : "bg-[var(--background)]"
+            }
+          >
+            <div className="mx-auto max-w-7xl px-6 py-20">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
                   Available Materials
                 </p>
 
                 <h2 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--text)] md:text-4xl">
-                  Aluminum Trading Portfolio
+                  {group.title}
                 </h2>
+
+                <p className="mt-5 text-[17px] leading-8 text-[var(--text-light)]">
+                  {group.description}
+                </p>
               </div>
 
-              <p className="text-sm text-[var(--text-light)]">
-                {activeMaterials.length} Materials
+              <div
+                className={`mt-12 grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] ${
+                  group.materials.length === 1
+                    ? "md:grid-cols-1"
+                    : group.materials.length === 3
+                      ? "md:grid-cols-3"
+                      : "md:grid-cols-2"
+                }`}
+              >
+                {group.materials.map((material) => (
+                  <article
+                    key={material.id}
+                    className="group flex min-h-[260px] flex-col bg-white p-7 transition-colors hover:bg-[var(--background)]"
+                  >
+                    <div className="flex items-start justify-between gap-5">
+                      <span className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--primary-dark)]">
+                        {material.form}
+                      </span>
+
+                      {material.grade && (
+                        <span className="text-xs text-[var(--text-light)]">
+                          {material.grade}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="mt-8 text-2xl font-semibold tracking-tight text-[var(--text)]">
+                      {material.displayName}
+                    </h3>
+
+                    <p className="mt-4 text-[15px] leading-7 text-[var(--text-light)]">
+                      {material.description}
+                    </p>
+
+                    <div className="mt-auto pt-8">
+                      <a
+                        href="/contact"
+                        className="text-sm font-semibold text-[var(--text)] transition-colors group-hover:text-[var(--primary-dark)]"
+                      >
+                        Request Details →
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        ))}
+
+        {/* Supply capability */}
+        <section className="border-t border-[var(--border)] bg-white">
+          <div className="mx-auto max-w-7xl px-6 py-20">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
+                Supply Capability
+              </p>
+
+              <h2 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--text)] md:text-4xl">
+                Flexible International Trading Support
+              </h2>
+
+              <p className="mt-5 text-[17px] leading-8 text-[var(--text-light)]">
+                Supply arrangements are coordinated according to product
+                specifications, trade terms, packaging requirements and
+                destination markets.
               </p>
             </div>
 
-            <div className="grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] md:grid-cols-2">
-              {activeMaterials.map((material, index) => (
+            <div className="mt-12 grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] md:grid-cols-3">
+              {supplyCapabilities.map((capability) => (
                 <article
-                  key={material.id}
-                  className="min-h-[210px] bg-white p-7 transition-colors hover:bg-[var(--background)]"
+                  key={capability.title}
+                  className="min-h-[250px] bg-white p-7"
                 >
-                  <div className="flex items-start justify-between gap-5">
-                    <span className="text-xs tracking-[0.16em] text-[var(--text-light)]">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
+                  <div className="h-2 w-2 rounded-full bg-[var(--primary-dark)]" />
 
-                    <span className="text-xs font-medium text-[var(--primary-dark)]">
-                      {material.form ?? "Aluminum"}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-8 text-2xl font-semibold tracking-tight text-[var(--text)]">
-                    {material.displayName}
+                  <h3 className="mt-7 text-xl font-semibold text-[var(--text)]">
+                    {capability.title}
                   </h3>
 
-                  {material.description && (
-                    <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[var(--text-light)]">
-                      {material.description}
-                    </p>
-                  )}
+                  <ul className="mt-5 space-y-3 text-[15px] leading-7 text-[var(--text-light)]">
+                    {capability.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
                 </article>
               ))}
             </div>
@@ -88,15 +230,15 @@ export default function AluminumPage() {
 
         {/* Contact */}
         <section className="bg-[var(--background)]">
-          <div className="mx-auto flex max-w-7xl flex-col justify-between gap-7 px-6 py-16 md:flex-row md:items-center">
+          <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-6 py-16 md:flex-row md:items-center">
             <div>
               <h2 className="text-3xl font-semibold text-[var(--text)]">
                 Looking for aluminum materials?
               </h2>
 
-              <p className="mt-3 text-[var(--text-light)]">
-                Contact us to discuss availability, specifications and trading
-                requirements.
+              <p className="mt-3 text-[16px] leading-7 text-[var(--text-light)]">
+                Contact us to discuss grades, specifications, origin,
+                availability, packaging and trade terms.
               </p>
             </div>
 
@@ -104,7 +246,7 @@ export default function AluminumPage() {
               href="/contact"
               className="btn-primary shrink-0 rounded-sm px-7 py-3 font-medium"
             >
-              Contact Us
+              Send an Inquiry
             </a>
           </div>
         </section>

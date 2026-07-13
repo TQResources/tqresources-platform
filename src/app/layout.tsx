@@ -14,25 +14,58 @@ export const metadata: Metadata = {
   metadataBase: new URL(company.website),
 
   title: {
-    default: `${company.brandName} | Global Metal Trading`,
-    template: `%s | ${company.brandName}`,
+    default: "TQ Resources | Global Metal Trading",
+    template: "%s | TQ Resources",
   },
 
-  description: company.seo.description,
+  description:
+    "TorQue Resources Co., Limited is a Japan-based international trading company specializing in metal resources and industrial materials.",
 
-  keywords: company.seo.keywords,
+  keywords: [
+    "TQ Resources",
+    "TorQue Resources",
+    "Global Metal Trading",
+    "Metal Resources",
+    "Industrial Materials",
+    "Aluminum",
+    "Copper",
+    "Zinc",
+    "Brass",
+    "Stainless Steel",
+    "Lead",
+    "Magnesium",
+    "Silicon Metal",
+    "Rare Metals",
+    "International Trading Company Japan",
+  ],
+
+  authors: [
+    {
+      name: company.legalName,
+    },
+  ],
+
+  creator: company.legalName,
+
+  publisher: company.legalName,
 
   alternates: {
     canonical: "/",
   },
 
   openGraph: {
-    title: `${company.brandName} | Global Metal Trading`,
-    description: company.seo.description,
+    title: "TQ Resources | Global Metal Trading",
+    description:
+      "Japan-based international trading company specializing in metal resources and industrial materials.",
     url: company.website,
     siteName: company.brandName,
     locale: "en_US",
     type: "website",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
