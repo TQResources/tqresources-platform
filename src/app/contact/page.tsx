@@ -20,7 +20,7 @@ export default function ContactPage() {
               Contact Us
             </h1>
 
-            <p className="mt-6 max-w-3xl text-[17px] leading-8 text-[var(--text-light)]">
+            <p className="mt-6 max-w-6xl text-[17px] leading-8 text-[var(--text-light)]">
               We welcome inquiries from customers, suppliers and business
               partners regarding metal resources and international trading
               opportunities.
@@ -89,7 +89,7 @@ export default function ContactPage() {
                 Discuss Your Trading Requirements
               </h2>
 
-              <p className="mt-3 max-w-2xl text-[16px] leading-7 text-[var(--text-light)]">
+              <p className="mt-3 max-w-6xl text-[16px] leading-7 text-[var(--text-light)]">
                 Please include the product, quantity, origin or destination,
                 specifications and preferred trade terms in your inquiry.
               </p>

@@ -2,8 +2,9 @@
 
 :root {
   /* 奶黄色：按钮填充 */
-  --primary: #f3d999;
-  --primary-hover: #e8c978;
+  
+  --primary: #f8df86;
+  --primary-hover: #f7cf3d;
 
   /* 原来的金属黄色：小标题和强调文字 */
   --primary-dark: #c49a2e;

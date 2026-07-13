@@ -41,7 +41,7 @@ export default function AboutPage() {
               TorQue Resources Co., Limited
             </h1>
 
-            <p className="mt-6 max-w-3xl text-[17px] leading-8 text-[var(--text-light)]">
+            <p className="mt-6 max-w-6xl text-[17px] leading-8 text-[var(--text-light)]">
               A Japan-based international trading company connecting metal
               resources and industrial materials with customers across global
               markets.
@@ -65,29 +65,31 @@ export default function AboutPage() {
             </div>
 
             <div className="max-w-3xl space-y-5 text-[17px] leading-8 text-[var(--text-light)]">
-              <p>
-                {company.legalName} is an international trading company
-                specializing in metal resources and industrial materials.
-              </p>
+  <p>
+    TorQue Resources Co., Limited supports international metal trading by
+    connecting reliable suppliers and customers through efficient sourcing,
+    transparent communication and professional trade execution.
+  </p>
 
-              <p>
-                We connect reliable suppliers and customers through professional
-                sourcing, international trade and supply-chain coordination.
-              </p>
+  <p>
+    We provide practical trading solutions covering supplier development,
+    contract coordination, quality control, international logistics and trade
+    documentation to support long-term business cooperation.
+  </p>
 
-              <p>
-                Our business covers primary metals, recycled materials, alloy
-                products and specialty metals across Asia, Europe, Oceania,
-                Africa and North America.
-              </p>
-            </div>
+  <p>
+    With an international business network across Asia, Europe, Oceania,
+    Africa and North America, we are committed to building reliable and
+    sustainable partnerships in global metal and industrial materials trading.
+  </p>
+</div>
           </div>
         </section>
 
         {/* Core Business */}
         <section className="bg-[var(--background)]">
           <div className="mx-auto max-w-7xl px-6 py-20">
-            <div className="max-w-2xl">
+            <div className="max-w-6xl">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
                 Core Business
               </p>

@@ -44,7 +44,7 @@ export default function MarketsPage() {
         {/* Market list */}
         <section className="border-t border-[var(--border)] bg-white">
           <div className="mx-auto max-w-7xl px-6 py-20">
-            <div className="max-w-2xl">
+            <div className="max-w-6xl">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--primary-dark)]">
                 Trading Network
               </p>

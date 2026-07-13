@@ -94,7 +94,7 @@ export default function ResourcesPage() {
               Metal &amp; Industrial Materials
             </h1>
 
-            <p className="mt-6 max-w-5xl text-[17px] leading-8 text-[var(--text-light)]">
+            <p className="mt-6 max-w-6xl text-[17px] leading-8 text-[var(--text-light)]">
               Explore our portfolio of primary metals, recycled materials,
               alloys and industrial materials supplied through our
               international trading network.
