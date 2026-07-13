@@ -24,8 +24,8 @@ const materials = [
     count: "2 Materials",
     tagline: "Zinc Ingot & Zinc Scrap",
     description: "Zinc ingot and selected zinc-based recycled materials.",
-    href: "",
-    available: false,
+    href: "/resources/zinc",
+    available: true,
   },
   {
     name: "Brass",

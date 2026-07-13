@@ -27,7 +27,7 @@ const featuredResources = [
     description:
       "Zinc ingot and selected zinc-based recycled materials supplied through our international network.",
     count: zincResources.filter((item) => item.active).length,
-    href: "/resources",
+    href: "/resources/zinc",
   },
 ];
 
