@@ -45,10 +45,7 @@ export default function Footer() {
             <ul className="mt-5 grid grid-cols-2 gap-x-10 gap-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-[15px] text-[var(--text-light)] transition-colors hover:text-[var(--primary-dark)]"
-                  >
+                  <a href={link.href} className="nav-link text-[15px]">
                     {link.name}
                   </a>
                 </li>
@@ -65,10 +62,7 @@ export default function Footer() {
             <ul className="mt-5 grid grid-cols-2 gap-x-10 gap-y-3">
               {featuredMaterials.map((material) => (
                 <li key={material.name}>
-                  <a
-                    href={material.href}
-                    className="text-[15px] text-[var(--text-light)] transition-colors hover:text-[var(--primary-dark)]"
-                  >
+                  <a href={material.href} className="nav-link text-[15px]">
                     {material.name}
                   </a>
                 </li>
@@ -85,7 +79,7 @@ export default function Footer() {
             <div className="mt-5 text-[15px] text-[var(--text-light)]">
               <a
                 href={`mailto:${company.email}`}
-                className="block whitespace-nowrap transition-colors hover:text-[var(--primary-dark)]"
+                className="nav-link whitespace-nowrap text-[15px]"
               >
                 {company.email}
               </a>

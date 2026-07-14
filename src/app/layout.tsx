@@ -19,23 +19,18 @@ export const metadata: Metadata = {
   },
 
   description:
-    "TorQue Resources Co., Limited is a Japan-based international trading company specializing in metal resources and industrial materials.",
+    "TorQue Resources Co., Limited is a Japan-based international trading company specializing in aluminum, copper, zinc, recycled metals and industrial materials.",
 
   keywords: [
     "TQ Resources",
     "TorQue Resources",
     "Global Metal Trading",
-    "Metal Resources",
+    "Metal Trading Company Japan",
+    "Aluminum Trading",
+    "Copper Trading",
+    "Zinc Trading",
+    "Recycled Metals",
     "Industrial Materials",
-    "Aluminum",
-    "Copper",
-    "Zinc",
-    "Brass",
-    "Stainless Steel",
-    "Lead",
-    "Magnesium",
-    "Silicon Metal",
-    "Rare Metals",
     "International Trading Company Japan",
   ],
 
@@ -46,17 +41,12 @@ export const metadata: Metadata = {
   ],
 
   creator: company.legalName,
-
   publisher: company.legalName,
-
-  alternates: {
-    canonical: "/",
-  },
 
   openGraph: {
     title: "TQ Resources | Global Metal Trading",
     description:
-      "Japan-based international trading company specializing in metal resources and industrial materials.",
+      "Japan-based international trading company specializing in aluminum, copper, zinc and industrial materials.",
     url: company.website,
     siteName: company.brandName,
     locale: "en_US",
