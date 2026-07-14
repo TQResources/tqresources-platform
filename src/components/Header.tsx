@@ -16,16 +16,16 @@ export default function Header() {
 
   return (
     <header className="relative z-50 border-b border-[var(--border)] bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
         {/* Logo */}
         <a href="/" className="flex items-center">
           <Image
-            src="/tqresources-logo.png"
+            src="/tqresources-logo.svg"
             alt={company.brandName}
             width={245}
             height={75}
             priority
-            className="h-auto w-[180px] sm:w-[210px]"
+            className="h-auto w-[140px] sm:w-[160px]"
           />
         </a>
 
