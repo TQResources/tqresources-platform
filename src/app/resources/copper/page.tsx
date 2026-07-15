@@ -1,6 +1,6 @@
 import Header from "../../../components/Header";
 import { copperResources } from "../../../data/resources/copper";
-
+import Image from "next/image";
 const refinedCopper = copperResources.filter((material) =>
   ["copper-cathode", "copper-ingot", "copper-granules"].includes(material.id)
 );
@@ -57,30 +57,49 @@ export default function CopperPage() {
 
       <main className="min-h-screen bg-[var(--background)]">
         {/* Introduction */}
-        <section className="border-b border-[var(--border)]">
-          <div className="mx-auto max-w-7xl px-6 py-20 md:py-24">
-            <a
-              href="/resources"
-              className="text-sm font-medium text-[var(--text-light)] transition-colors hover:text-[var(--primary-dark)]"
-            >
-              ← Back to Resources
-            </a>
+        <section className="relative overflow-hidden border-b border-[var(--border)]">
+  {/* Background Image */}
+  <div className="absolute inset-0">
+    <Image
+      src="/images/resources/copper/copper-hero.jpg"
+      alt="Copper materials"
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover object-center"
+    />
 
-            <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-              Copper
-            </p>
+    {/* White overlay */}
+    <div className="absolute inset-0 bg-white/82" />
+  </div>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--text)] md:text-5xl">
-              Copper Materials
-            </h1>
+  {/* Content */}
+  <div className="relative mx-auto max-w-7xl px-6 py-20 md:py-24">
+    <a
+      href="/resources"
+      className="inline-flex items-center text-[15px] text-black transition hover:text-[var(--primary-dark)]"
+    >
+      ← Back to Resources
+    </a>
 
-            <p className="mt-6 text-[17px] leading-8 text-[var(--text-light)]">
-              Reliable copper materials supplied for international industrial,
-              recycling and trading requirements. Typical specifications,
-              purity, packaging and documentation are available upon request.
-            </p>
-          </div>
-        </section>
+    <div className="mt-12 max-w-6xl">
+      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--primary-dark)]">
+        Copper
+      </p>
+
+      <h1 className="mt-5 text-5xl font-semibold leading-tight tracking-tight text-black md:text-6xl">
+        Copper Materials
+      </h1>
+
+      <p className="mt-8 max-w-6xl text-xl leading-10 text-black">
+        Reliable copper materials supplied for international manufacturing,
+        electrical, recycling and trading applications. Typical specifications,
+        chemical composition, packaging and documentation are available upon
+        request.
+      </p>
+    </div>
+  </div>
+</section>
 
         {/* Material groups */}
         {materialGroups.map((group, groupIndex) => (

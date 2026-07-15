@@ -85,7 +85,7 @@ export default function ResourcesPage() {
       <main className="min-h-screen bg-[var(--background)]">
         {/* Introduction */}
         <section className="border-b border-[var(--border)]">
-          <div className="mx-auto max-w-7xl px-6 py-20 md:py-24">
+          <div className="mx-auto max-w-7xl px-6 pt-20 pb-14 md:pt-24 md:pb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
               Resources
             </p>

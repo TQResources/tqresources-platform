@@ -1,6 +1,6 @@
 import Header from "../../../components/Header";
 import { aluminumResources } from "../../../data/resources/aluminum";
-
+import Image from "next/image";
 const recycledAluminum = aluminumResources.filter((material) =>
   ["adc12", "aluminum-sow", "off-grade-aluminum-ingot", "ubc-ingot"].includes(
     material.id
@@ -86,31 +86,48 @@ export default function AluminumPage() {
 
       <main className="min-h-screen bg-[var(--background)]">
         {/* Introduction */}
-        <section className="border-b border-[var(--border)]">
-          <div className="mx-auto max-w-7xl px-6 py-20 md:py-24">
-            <a
-              href="/resources"
-              className="text-sm font-medium text-[var(--text-light)] transition-colors hover:text-[var(--primary-dark)]"
-            >
-              ← Back to Resources
-            </a>
+        <section className="relative overflow-hidden border-b border-[var(--border)]">
+  {/* Background Image */}
+  <div className="absolute inset-0">
+    <Image
+      src="/images/resources/aluminum/aluminum-hero.jpg"
+      alt="Aluminum ingots"
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover object-center"
+    />
 
-            <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-              Aluminum
-            </p>
+    {/* White overlay */}
+    <div className="absolute inset-0 bg-white/82" />
+  </div>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--text)] md:text-5xl">
-              Aluminum Materials
-            </h1>
+  {/* Content */}
+  <div className="relative mx-auto max-w-7xl px-6 py-20 md:py-24">
+    <a
+      href="/resources"
+      className="inline-flex items-center text-[15px] text-black transition hover:text-[var(--primary-dark)]"
+    >
+      ← Back to Resources
+    </a>
 
-            <p className="mt-6 text-[17px] leading-8 text-[var(--text-light)]">
-              Reliable aluminum materials supplied for international
-              manufacturing, recycling and trading applications. Typical
-              specifications, chemical composition, packaging and documentation
-              are available upon request.
-            </p>
-          </div>
-        </section>
+    <div className="mt-12 max-w-6xl">
+      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--primary-dark)]">
+        Aluminum
+      </p>
+
+      <h1 className="mt-5 text-5xl font-semibold leading-tight tracking-tight text-[var(--text)] md:text-6xl">
+        Aluminum Materials
+      </h1>
+
+      <p className="mt-8 max-w-6xl text-xl leading-10 text-black">
+        Reliable aluminum materials supplied for international manufacturing,
+        recycling and trading applications. Typical specifications, chemical
+        composition, packaging and documentation are available upon request.
+      </p>
+    </div>
+  </div>
+</section>
 
         {/* Material groups */}
         {materialGroups.map((group, groupIndex) => (

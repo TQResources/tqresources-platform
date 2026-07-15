@@ -1,6 +1,6 @@
 import Header from "../../../components/Header";
 import { zincResources } from "../../../data/resources/zinc";
-
+import Image from "next/image";
 const primaryZinc = zincResources.filter((material) =>
   ["shg-zinc-ingot", "prime-western-zinc"].includes(material.id)
 );
@@ -67,31 +67,50 @@ export default function ZincPage() {
 
       <main className="min-h-screen bg-[var(--background)]">
         {/* Introduction */}
-        <section className="border-b border-[var(--border)]">
-          <div className="mx-auto max-w-7xl px-6 py-20 md:py-24">
-            <a
-              href="/resources"
-              className="text-sm font-medium text-[var(--text-light)] transition-colors hover:text-[var(--primary-dark)]"
-            >
-              ← Back to Resources
-            </a>
+        
+      <section className="relative overflow-hidden border-b border-[var(--border)]">
+  {/* Background Image */}
+  <div className="absolute inset-0">
+    <Image
+      src="/images/resources/zinc/zinc-hero.jpg"
+      alt="Zinc materials"
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover object-center"
+    />
 
-            <p className="mt-10 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-              Zinc
-            </p>
+    {/* White overlay */}
+    <div className="absolute inset-0 bg-white/82" />
+  </div>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--text)] md:text-5xl">
-              Zinc Materials
-            </h1>
+  {/* Content */}
+  <div className="relative mx-auto max-w-7xl px-6 py-20 md:py-24">
+    <a
+      href="/resources"
+      className="inline-flex items-center text-[15px] text-black transition hover:text-[var(--primary-dark)]"
+    >
+      ← Back to Resources
+    </a>
 
-            <p className="mt-6 text-[17px] leading-8 text-[var(--text-light)]">
-              Reliable zinc materials supplied for galvanizing, manufacturing,
-              recycling and international trading requirements. Typical grades,
-              specifications, packaging and documentation are available upon
-              request.
-            </p>
-          </div>
-        </section>
+    <div className="mt-12 max-w-6xl">
+      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--primary-dark)]">
+        Zinc
+      </p>
+
+      <h1 className="mt-5 text-5xl font-semibold leading-tight tracking-tight text-black md:text-6xl">
+        Zinc Materials
+      </h1>
+
+      <p className="mt-8 max-w-6xl text-xl leading-10 text-black">
+        Reliable zinc materials supplied for international galvanizing,
+        die-casting, recycling and trading applications. Typical
+        specifications, chemical composition, packaging and documentation are
+        available upon request.
+      </p>
+    </div>
+  </div>
+</section>
 
         {/* Material groups */}
         {materialGroups.map((group, groupIndex) => (
