@@ -1,6 +1,6 @@
 import Header from "../../components/Header";
 import { company } from "../../config/company";
-
+import Image from "next/image";
 const businessAreas = [
   {
     title: "Primary Metals",
@@ -49,42 +49,54 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Who We Are */}
-        <section className="bg-white">
-          <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[0.75fr_1.25fr]">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-                Who We Are
-              </p>
-
-              <h2 className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-[var(--text)]">
-                Based in Osaka
-                <br />
-                Serving Global Markets
-              </h2>
-            </div>
-
-            <div className="max-w-3xl space-y-5 text-[17px] leading-8 text-[var(--text-light)]">
-  <p>
-    TorQue Resources Co., Limited supports international metal trading by
-    connecting reliable suppliers and customers through efficient sourcing,
-    transparent communication and professional trade execution.
+        <section className="border-t border-black/10 bg-white">
+  <div className="mx-auto grid max-w-7xl gap-14 px-6 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16 lg:px-10 lg:pt-24 lg:pb-14">
+    {/* Left column */}
+    <div>
+  <p className="mb-7 text-xs font-semibold uppercase tracking-[0.3em] text-[#c89216]">
+    Who We Are
   </p>
 
-  <p>
-    We provide practical trading solutions covering supplier development,
-    contract coordination, quality control, international logistics and trade
-    documentation to support long-term business cooperation.
-  </p>
+  <h2 className="text-4xl font-semibold leading-[1.15] tracking-[-0.035em] text-[#202124] md:text-5xl lg:whitespace-nowrap">
+    Based in Osaka
+    <br />
+    Serving Global Markets
+  </h2>
 
-  <p>
-    With an international business network across Asia, Europe, Oceania,
-    Africa and North America, we are committed to building reliable and
-    sustainable partnerships in global metal and industrial materials trading.
-  </p>
+  <div className="relative mt-9 h-[270px] w-full max-w-[520px] overflow-hidden rounded-2xl bg-neutral-100">
+    <Image
+      src="/images/about/osaka-port.jpg"
+      alt="Port of Osaka at sunset"
+      fill
+      sizes="(max-width: 1024px) 100vw, 45vw"
+      className="object-cover"
+    />
+  </div>
 </div>
-          </div>
-        </section>
+
+    {/* Right column */}
+    <div className="max-w-3xl space-y-7 pt-10 text-lg leading-11 text-[#66686d] lg:pt-8">
+      <p>
+        TorQue Resources Co., Limited supports international metal trading by
+        connecting reliable suppliers and customers through efficient sourcing,
+        transparent communication and professional trade execution.
+      </p>
+
+      <p>
+        We provide practical trading solutions covering supplier development,
+        contract coordination, quality control, international logistics and
+        trade documentation to support long-term business cooperation.
+      </p>
+
+      <p>
+        With an international business network across Asia, Europe, Oceania,
+        Africa and North America, we are committed to building reliable and
+        sustainable partnerships in global metal and industrial materials
+        trading.
+      </p>
+    </div>
+  </div>
+</section>
 
         {/* Core Business */}
         <section className="bg-[var(--background)]">
