@@ -1,4 +1,5 @@
 import Header from "../components/Header";
+import Image from "next/image";
 import { company } from "../config/company";
 import { aluminumResources } from "../data/resources/aluminum";
 import { copperResources } from "../data/resources/copper";
@@ -60,39 +61,111 @@ export default function Home() {
       <Header />
 
       <main>
-        {/* Hero */}
-        <section className="bg-[var(--background)]">
-          <div className="mx-auto max-w-7xl px-6 py-20 md:py-24">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--primary-dark)] sm:text-sm">
-              {company.legalName}
-            </p>
+      {/* Hero */}
+<section className="bg-[var(--background)]">
+  <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 md:py-24 lg:grid-cols-[1.22fr_0.92fr]">
+    {/* Left */}
+    <div className="min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--primary-dark)] sm:text-sm">
+        {company.legalName}
+      </p>
 
-            <h1 className="mt-5 max-w-5xl text-[38px] font-semibold leading-[1.22] tracking-tight text-[var(--text)] sm:text-[46px] md:text-[54px]">
-              Global Metal Resources
-            </h1>
+      <h1 className="mt-6 whitespace-nowrap text-[36px] font-semibold leading-[1.18] tracking-tight text-[var(--text)] sm:text-[44px] lg:text-[50px] xl:text-[54px]">
+        Global Metal Resources
+      </h1>
 
-            <p className="mt-6 max-w-2xl text-[17px] leading-8 text-[var(--text-light)] md:text-lg">
-              {company.slogan}
-            </p>
+      <p className="mt-7 max-w-2xl text-[17px] leading-8 text-[var(--text-light)] md:text-lg">
+        {company.slogan}
+      </p>
 
-            <div className="mt-9 flex flex-wrap gap-4">
-              <a
-                href="/contact"
-                className="btn-primary rounded-sm px-6 py-3 font-medium"
-              >
-                Contact Us
-              </a>
+      <div className="mt-9 flex flex-wrap gap-4">
+        <a
+          href="/contact"
+          className="btn-primary rounded-sm px-7 py-3 font-medium"
+        >
+          Contact Us
+        </a>
 
-              <a
-                href="/resources"
-                className="btn-secondary rounded-sm px-6 py-3 font-medium"
-              >
-                Explore Resources
-              </a>
-            </div>
-          </div>
-        </section>
+        <a
+          href="/resources"
+          className="btn-secondary rounded-sm px-7 py-3 font-medium"
+        >
+          Explore Resources
+        </a>
+      </div>
+    </div>
 
+    {/* Right Image */}
+    <div className="relative mx-auto w-full max-w-[620px] pb-12 lg:ml-auto">
+      <div className="overflow-hidden rounded-md shadow-[0_18px_45px_rgba(37,39,42,0.14)]">
+        <Image
+          src="/images/hero-metal-trading.jpg"
+          alt="International metal trading and global sourcing"
+          width={900}
+          height={675}
+          priority
+          sizes="(max-width: 1024px) 100vw, 46vw"
+          className="aspect-[4/3] w-full object-cover transition duration-700 hover:scale-[1.03]"
+        />
+      </div>
+
+      {/* Floating business card */}
+      <div className="absolute bottom-0 left-1/2 grid w-[88%] -translate-x-1/2 grid-cols-3 overflow-hidden border border-[var(--border)] bg-white shadow-[0_14px_34px_rgba(37,39,42,0.12)]">
+        <div className="flex min-h-[122px] flex-col items-center justify-center border-r border-[var(--border)] px-3 py-4 text-center">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-7 w-7 fill-none stroke-[var(--primary-dark)] stroke-[1.7]"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18M12 3c3 3 4.5 6 4.5 9S15 18 12 21M12 3c-3 3-4.5 6-4.5 9S9 18 12 21" />
+          </svg>
+
+          <p className="mt-3 text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-[var(--text)] sm:text-xs">
+            International
+            <br />
+            Trading
+          </p>
+        </div>
+
+        <div className="flex min-h-[122px] flex-col items-center justify-center border-r border-[var(--border)] px-3 py-4 text-center">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-7 w-7 fill-none stroke-[var(--primary-dark)] stroke-[1.7]"
+          >
+            <path d="M8.2 11.6 5.5 9a2 2 0 0 0-2.8 0l-.7.7 5.1 5.1a2 2 0 0 0 2.8 0l1.2-1.2" />
+            <path d="m15.8 11.6 2.7-2.6a2 2 0 0 1 2.8 0l.7.7-5.1 5.1a2 2 0 0 1-2.8 0l-4.9-4.9a2 2 0 0 1 0-2.8l.6-.6a2 2 0 0 1 2.8 0l1.4 1.4" />
+            <path d="m10.7 13.2 2 2M12.7 11.2l2 2" />
+          </svg>
+
+          <p className="mt-3 text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-[var(--text)] sm:text-xs">
+            Global
+            <br />
+            Sourcing
+          </p>
+        </div>
+
+        <div className="flex min-h-[92px] flex-col items-center justify-center px-3 py-2 text-center">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-7 w-7 fill-none stroke-[var(--primary-dark)] stroke-[1.7]"
+          >
+            <path d="M12 3 5 6v5c0 4.6 2.9 8.6 7 10 4.1-1.4 7-5.4 7-10V6l-7-3Z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+
+          <p className="mt-3 text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-[var(--text)] sm:text-xs">
+            Reliable
+            <br />
+            Supply
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> 
         {/* About Us */}
         <section className="border-t border-[var(--border)] bg-white">
           <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[0.75fr_1.25fr]">
