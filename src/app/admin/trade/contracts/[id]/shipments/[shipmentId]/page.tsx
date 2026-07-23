@@ -84,35 +84,21 @@ function downloadBlob(
   URL.revokeObjectURL(url);
 }
 
-function previewBlob(
-  blob: Blob,
-) {
-  const url =
-    URL.createObjectURL(blob);
+function previewBlob(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
 
-  const previewWindow =
-    window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer",
-    );
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
 
-  if (!previewWindow) {
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.setTimeout(() => {
     URL.revokeObjectURL(url);
-
-    window.alert(
-      "The PDF preview was blocked by the browser. Please allow pop-ups for this site.",
-    );
-
-    return;
-  }
-
-  window.setTimeout(
-    () => {
-      URL.revokeObjectURL(url);
-    },
-    60_000,
-  );
+  }, 60_000);
 }
 
 function cloneShipment(

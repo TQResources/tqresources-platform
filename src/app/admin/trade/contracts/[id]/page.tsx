@@ -836,18 +836,15 @@ function formatNumber(value: number, digits: number) {
 
 function previewBlob(blob: Blob) {
   const url = URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
 
-  const previewWindow = window.open(url, "_blank", "noopener,noreferrer");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
 
-  if (!previewWindow) {
-    URL.revokeObjectURL(url);
-
-    window.alert(
-      "The PDF preview was blocked by the browser. Please allow pop-ups for this site and try again.",
-    );
-
-    return;
-  }
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
 
   window.setTimeout(() => {
     URL.revokeObjectURL(url);
