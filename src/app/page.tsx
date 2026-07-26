@@ -82,7 +82,7 @@ export default function Home() {
       <div className="mt-9 flex flex-wrap gap-4">
         <a
           href="/resources"
-          className="btn-secondary rounded-sm px-7 py-3 font-medium"
+          className="rounded-sm border border-[#d8b44a]/30 bg-[#f7f7f4] px-7 py-3 font-medium text-[#b88a18] transition hover:border-[#d8b44a]/50 hover:bg-[#f2f1ec]"
         >
           Explore Resources
         </a>
