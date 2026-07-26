@@ -23,7 +23,7 @@ export const aluminumResources: Resource[] = [
   {
     id: "aluminum-sow",
     name: "Recycled Aluminum Sow",
-    displayName: "Aluminum Sow",
+    displayName: "Aluminum Sows",
     metal: "Aluminum",
     form: "Recycled Aluminum",
     description:

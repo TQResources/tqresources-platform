@@ -179,7 +179,7 @@ export default function AluminumPage() {
   <div className="relative mx-auto max-w-7xl px-6 py-20 md:py-24">
     <a
       href="/zh/resources"
-      className="inline-flex items-center text-[15px] text-black transition hover:text-[var(--primary-dark)]"
+      className="inline-flex items-center rounded-full border border-black/10 bg-white/90 px-4 py-2 text-[15px] font-semibold text-black shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md hover:text-[var(--primary-dark)]"
     >
       ← 返回金属资源
     </a>
@@ -264,7 +264,7 @@ export default function AluminumPage() {
 
                     <div className="mt-auto pt-8">
                       <a
-                        href="/contact"
+                        href={material.id === "aluminum-sow" ? "/zh/resources/aluminum/usa-sows" : "/zh/contact"}
                         className="text-sm font-semibold text-[var(--text)] transition-colors group-hover:text-[var(--primary-dark)]"
                       >
                         咨询详情 →

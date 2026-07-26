@@ -61,7 +61,7 @@ export default function CopperPage() {
   {/* Background Image */}
   <div className="absolute inset-0">
     <Image
-      src="/images/resources/copper/copper-hero.jpg"
+      src="/images/resources/copper/copper-hero-new.jpg"
       alt="Copper materials"
       fill
       priority
@@ -77,7 +77,7 @@ export default function CopperPage() {
   <div className="relative mx-auto max-w-7xl px-6 py-20 md:py-24">
     <a
       href="/resources"
-      className="inline-flex items-center text-[15px] text-black transition hover:text-[var(--primary-dark)]"
+      className="inline-flex items-center rounded-full border border-black/10 bg-white/90 px-4 py-2 text-[15px] font-semibold text-black shadow-sm backdrop-blur-sm transition hover:bg-white hover:shadow-md hover:text-[var(--primary-dark)]"
     >
       ← Back to Resources
     </a>

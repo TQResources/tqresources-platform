@@ -106,7 +106,7 @@ export default function Home() {
             .map((item) => (
               <a
                 key={item.id}
-                href={`/available-materials/${item.slug}`}
+                href={item.id === "aluminum-sow" ? "/resources/aluminum/usa-sows" : "/resources/zinc/zinc-sow"}
                 className="group flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--border)] py-3 pr-2 last:border-b-0"
               >
                 <span className="flex min-w-0 items-center gap-3">

@@ -8,7 +8,7 @@ import { availableMaterials } from "../../data/available-materials";
 
 const featuredResources = [
   {
-    name: "Aluminum",
+    name: "铝",
     tagline: "原生铝・铝合金・再生铝",
     description:
       "原生铝锭、铝大锭、ADC12、非标铝锭、UBC铝锭及各类再生铝材料。",
@@ -16,7 +16,7 @@ const featuredResources = [
     href: "/zh/resources/aluminum",
   },
   {
-    name: "Copper",
+    name: "铜",
     tagline: "精炼铜与再生铜资源",
     description:
       "阴极铜、铜锭、铜米、Berry / Candy 及 Birch / Cliff。",
@@ -24,7 +24,7 @@ const featuredResources = [
     href: "/zh/resources/copper",
   },
   {
-    name: "Zinc",
+    name: "锌",
     tagline: "锌锭与锌废料",
     description:
       "通过我们的国际供应网络提供锌锭及各类再生锌材料。",
@@ -32,6 +32,25 @@ const featuredResources = [
     href: "/zh/resources/zinc",
   },
 ];
+
+const localizedMarketNames: Record<string, string> = {
+  "Japan": "日本",
+  "China": "中国",
+  "South Korea": "韩国",
+  "United States": "美国",
+  "United Kingdom": "英国",
+  "Australia": "澳大利亚",
+  "India": "印度",
+  "Pakistan": "巴基斯坦",
+  "Indonesia": "印度尼西亚",
+  "Vietnam": "越南",
+  "Thailand": "泰国",
+  "Malaysia": "马来西亚",
+  "Cambodia": "柬埔寨",
+  "Nigeria": "尼日利亚",
+  "Tanzania": "坦桑尼亚",
+  "Mozambique": "莫桑比克",
+};
 
 const strengths = [
   {
@@ -106,7 +125,7 @@ export default function Home() {
             .map((item) => (
               <a
                 key={item.id}
-                href={`/zh/available-materials/${item.slug}`}
+                href={item.id === "aluminum-sow" ? "/zh/resources/aluminum/usa-sows" : "/zh/resources/zinc/zinc-sow"}
                 className="group flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--border)] py-3 pr-2 last:border-b-0"
               >
                 <span className="flex min-w-0 items-center gap-3">
@@ -265,10 +284,10 @@ export default function Home() {
             <div className="flex flex-wrap content-start gap-3">
               {company.markets.map((market) => (
                 <span
-                  key={market}
+                  key={localizedMarketNames[market] ?? market}
                   className="border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm text-[var(--text-light)]"
                 >
-                  {market}
+                  {localizedMarketNames[market] ?? market}
                 </span>
               ))}
             </div>
@@ -312,7 +331,7 @@ export default function Home() {
           <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-6 py-20 md:flex-row md:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-                Contact
+                联系我们
               </p>
 
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--text)] md:text-4xl">

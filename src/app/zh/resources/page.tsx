@@ -16,7 +16,7 @@ const materials = [
     tagline: "精炼铜与再生铜资源",
     description:
       "阴极铜、铜锭、铜米、Berry / Candy 及 Birch / Cliff。",
-    href: "/resources/copper",
+    href: "/zh/resources/copper",
     available: true,
   },
   {
@@ -87,7 +87,7 @@ export default function ResourcesPage() {
         <section className="border-b border-[var(--border)]">
           <div className="mx-auto max-w-7xl px-6 pt-20 pb-14 md:pt-24 md:pb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-              Resources
+              金属资源
             </p>
 
             <h1 className="mt-5 max-w-5xl text-4xl font-semibold leading-tight tracking-tight text-[var(--text)] md:text-5xl">

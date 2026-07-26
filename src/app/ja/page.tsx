@@ -8,7 +8,7 @@ import { availableMaterials } from "../../data/available-materials";
 
 const featuredResources = [
   {
-    name: "Aluminum",
+    name: "アルミニウム",
     tagline: "一次アルミ・合金・再生アルミ",
     description:
       "一次アルミ地金、アルミソウ、ADC12、規格外インゴット、UBCインゴット、各種再生原料。",
@@ -16,7 +16,7 @@ const featuredResources = [
     href: "/ja/resources/aluminum",
   },
   {
-    name: "Copper",
+    name: "銅",
     tagline: "精製銅・再生銅資源",
     description:
       "銅カソード、銅インゴット、銅粒、Berry / Candy、Birch / Cliff。",
@@ -24,7 +24,7 @@ const featuredResources = [
     href: "/ja/resources/copper",
   },
   {
-    name: "Zinc",
+    name: "亜鉛",
     tagline: "亜鉛地金・亜鉛スクラップ",
     description:
       "国際的な供給ネットワークを通じて、亜鉛地金および各種再生亜鉛材料を供給します。",
@@ -32,6 +32,25 @@ const featuredResources = [
     href: "/ja/resources/zinc",
   },
 ];
+
+const localizedMarketNames: Record<string, string> = {
+  "Japan": "日本",
+  "China": "中国",
+  "South Korea": "韓国",
+  "United States": "米国",
+  "United Kingdom": "英国",
+  "Australia": "オーストラリア",
+  "India": "インド",
+  "Pakistan": "パキスタン",
+  "Indonesia": "インドネシア",
+  "Vietnam": "ベトナム",
+  "Thailand": "タイ",
+  "Malaysia": "マレーシア",
+  "Cambodia": "カンボジア",
+  "Nigeria": "ナイジェリア",
+  "Tanzania": "タンザニア",
+  "Mozambique": "モザンビーク",
+};
 
 const strengths = [
   {
@@ -106,7 +125,7 @@ export default function Home() {
             .map((item) => (
               <a
                 key={item.id}
-                href={`/ja/available-materials/${item.slug}`}
+                href={item.id === "aluminum-sow" ? "/ja/resources/aluminum/usa-sows" : "/ja/resources/zinc/zinc-sow"}
                 className="group flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--border)] py-3 pr-2 last:border-b-0"
               >
                 <span className="flex min-w-0 items-center gap-3">
@@ -265,10 +284,10 @@ export default function Home() {
             <div className="flex flex-wrap content-start gap-3">
               {company.markets.map((market) => (
                 <span
-                  key={market}
+                  key={localizedMarketNames[market] ?? market}
                   className="border border-[var(--border)] bg-[var(--background)] px-4 py-2 text-sm text-[var(--text-light)]"
                 >
-                  {market}
+                  {localizedMarketNames[market] ?? market}
                 </span>
               ))}
             </div>
@@ -312,7 +331,7 @@ export default function Home() {
           <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-6 py-20 md:flex-row md:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--primary-dark)]">
-                Contact
+                お問い合わせ
               </p>
 
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--text)] md:text-4xl">
