@@ -4,6 +4,7 @@ import { company } from "../config/company";
 import { aluminumResources } from "../data/resources/aluminum";
 import { copperResources } from "../data/resources/copper";
 import { zincResources } from "../data/resources/zinc";
+import { availableMaterials } from "../data/available-materials";
 
 const featuredResources = [
   {
@@ -80,18 +81,52 @@ export default function Home() {
 
       <div className="mt-9 flex flex-wrap gap-4">
         <a
-          href="/contact"
-          className="btn-primary rounded-sm px-7 py-3 font-medium"
-        >
-          Contact Us
-        </a>
-
-        <a
           href="/resources"
           className="btn-secondary rounded-sm px-7 py-3 font-medium"
         >
           Explore Resources
         </a>
+
+        <a
+          href="/contact"
+          className="btn-primary rounded-sm px-7 py-3 font-medium"
+        >
+          Contact Us
+        </a>
+      </div>
+
+      <div className="mt-5 max-w-[430px]">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--primary-dark)]">
+          Available Now
+        </p>
+
+        <div className="max-h-[174px] overflow-y-auto border-y border-[var(--border)]">
+          {availableMaterials
+            .filter((item) => item.active)
+            .map((item) => (
+              <a
+                key={item.id}
+                href={`/available-materials/${item.slug}`}
+                className="group flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--border)] py-3 pr-2 last:border-b-0"
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="text-sm font-medium text-[var(--text)] transition group-hover:text-[var(--primary-dark)]">
+                    {item.title.en}
+                  </span>
+                  <span className="truncate text-xs text-[var(--text-light)]">
+                    {item.origin.en} · {item.status.en}
+                  </span>
+                </span>
+
+                <span
+                  aria-hidden="true"
+                  className="text-sm text-[var(--text-light)] transition group-hover:translate-x-1 group-hover:text-[var(--primary-dark)]"
+                >
+                  →
+                </span>
+              </a>
+            ))}
+        </div>
       </div>
     </div>
 
