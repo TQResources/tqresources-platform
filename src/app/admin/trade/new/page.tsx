@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { Suspense, useMemo, useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { getCompanyById } from "../../../../data/trade/companies";
@@ -67,7 +67,7 @@ function formatNumber(value: number, digits = 2) {
   });
 }
 
-export default function NewTradeContractPage() {
+function NewTradeContractPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -1045,5 +1045,21 @@ function DocumentNumber({
 
       <span className="font-mono text-sm">{number}</span>
     </div>
+  );
+}
+
+export default function NewTradeContractPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#f6f6f4] px-6 py-12">
+          <div className="mx-auto max-w-7xl text-sm text-black/50">
+            Loading contract form...
+          </div>
+        </main>
+      }
+    >
+      <NewTradeContractPageContent />
+    </Suspense>
   );
 }
