@@ -150,6 +150,29 @@ export type ShipmentRecord = {
    */
   receivedDate?: string;
 
+  /**
+   * Purchase unit price for this shipment.
+   */
+  purchaseUnitPrice?: number;
+
+  /**
+   * Optional supplier invoice amount.
+   * When present, this overrides the calculated
+   * net weight × purchase unit price amount.
+   */
+  purchaseAmountOverride?: number;
+
+  /**
+   * Other direct costs for this shipment.
+   */
+  commissionAmount?: number;
+
+  /**
+   * Positive values increase profit;
+   * negative values reduce profit.
+   */
+  otherAdjustment?: number;
+
   containers: ShipmentContainer[];
 
   createdAt: string;

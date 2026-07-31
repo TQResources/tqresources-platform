@@ -174,6 +174,86 @@ function normalizeDecimalInput(
 
   return normalized;
 }
+function ProfitInput({
+  label,
+  value,
+  onChange,
+  note,
+  allowNegative = false,
+}: {
+  label: string;
+  value?: number;
+  onChange: (
+    value: number | undefined,
+  ) => void;
+  note?: string;
+  allowNegative?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-wide text-black/45">
+        {label}
+      </span>
+
+      <input
+        type="text"
+        inputMode="decimal"
+        value={
+          value === undefined
+            ? ""
+            : value
+        }
+        onChange={(event) => {
+          const rawValue =
+            event.target.value;
+
+          const cleanedValue =
+            rawValue
+              .replace(
+                allowNegative
+                  ? /[^0-9.-]/g
+                  : /[^0-9.]/g,
+                "",
+              )
+              .replace(
+                /(\..*)\./g,
+                "$1",
+              )
+              .replace(
+                allowNegative
+                  ? /(?!^)-/g
+                  : /-/g,
+                "",
+              )
+              .replace(
+                /^(-?)0+(?=\d)/,
+                "$1",
+              );
+
+          if (
+            cleanedValue === "" ||
+            cleanedValue === "-"
+          ) {
+            onChange(undefined);
+            return;
+          }
+
+          onChange(
+            Number(cleanedValue),
+          );
+        }}
+        className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none focus:border-black"
+      />
+
+      {note ? (
+        <span className="mt-2 block text-xs text-black/45">
+          {note}
+        </span>
+      ) : null}
+    </label>
+  );
+}
+
 function ReceiptMetric({
   label,
   value,
@@ -380,6 +460,84 @@ export default function ShipmentDetailPage() {
     actualAmountReceived > balanceDue
       ? actualAmountReceived -
         balanceDue
+      : 0;
+
+  const purchaseUnitPrice =
+    Number(
+      displayedShipment
+        ?.purchaseUnitPrice,
+    ) || 0;
+
+  const calculatedPurchaseAmount =
+    totalNetWeight *
+    purchaseUnitPrice;
+
+  const purchaseAmountOverride =
+    Number(
+      displayedShipment
+        ?.purchaseAmountOverride,
+    ) || 0;
+
+  const finalPurchaseAmount =
+    purchaseAmountOverride > 0
+      ? purchaseAmountOverride
+      : calculatedPurchaseAmount;
+
+  const commissionAmount =
+    Number(
+      displayedShipment
+        ?.commissionAmount,
+    ) || 0;
+
+  const otherAdjustment =
+    Number(
+      displayedShipment
+        ?.otherAdjustment,
+    ) || 0;
+
+  const contractDepositAmount =
+    Number(
+      contract?.depositAmount,
+    ) || 0;
+
+  const actualDepositReceived =
+    Number(
+      contract
+        ?.actualDepositReceived,
+    ) || 0;
+
+  const totalPiBankFee =
+    contractDepositAmount > 0 &&
+    actualDepositReceived > 0
+      ? Math.max(
+          contractDepositAmount -
+            actualDepositReceived,
+          0,
+        )
+      : 0;
+
+  const allocatedPiBankFee =
+    contractDepositAmount > 0
+      ? totalPiBankFee *
+        (
+          depositApplied /
+          contractDepositAmount
+        )
+      : 0;
+
+  const netProfit =
+    invoiceAmount -
+    finalPurchaseAmount -
+    claimAmount -
+    commissionAmount -
+    calculatedBankFee -
+    allocatedPiBankFee +
+    otherAdjustment;
+
+  const profitPerMt =
+    totalNetWeight > 0
+      ? netProfit /
+        totalNetWeight
       : 0;
 
   const documentWarnings =
@@ -977,6 +1135,26 @@ export default function ShipmentDetailPage() {
                 draftShipment.actualAmountReceived,
               ) || 0,
 
+        purchaseUnitPrice:
+          Number(
+            draftShipment.purchaseUnitPrice,
+          ) || 0,
+
+        purchaseAmountOverride:
+          Number(
+            draftShipment.purchaseAmountOverride,
+          ) || 0,
+
+        commissionAmount:
+          Number(
+            draftShipment.commissionAmount,
+          ) || 0,
+
+        otherAdjustment:
+          Number(
+            draftShipment.otherAdjustment,
+          ) || 0,
+
         containers:
   draftShipment.containers.map(
     (container) => {
@@ -1572,6 +1750,162 @@ export default function ShipmentDetailPage() {
             Bank Fee = the amount due printed on the CI minus
             the actual amount received.
           </p>
+        </section>
+
+        <section className="mt-7 rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/40">
+              CI Profit
+            </p>
+
+            <h2 className="mt-1 text-lg font-semibold">
+              Shipment profit calculation
+            </h2>
+
+            <p className="mt-2 text-sm text-black/50">
+              The PI bank fee is allocated according to the
+              deposit applied to this CI.
+            </p>
+          </div>
+
+          {isEditing && draftShipment ? (
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <ProfitInput
+                label="Purchase Unit Price"
+                value={
+                  draftShipment.purchaseUnitPrice
+                }
+                onChange={(value) =>
+                  updateDraftField(
+                    "purchaseUnitPrice",
+                    value,
+                  )
+                }
+              />
+
+              <ProfitInput
+                label="Final Purchase Amount"
+                value={
+                  draftShipment.purchaseAmountOverride
+                }
+                onChange={(value) =>
+                  updateDraftField(
+                    "purchaseAmountOverride",
+                    value,
+                  )
+                }
+                note="Leave blank or zero to use net weight × purchase unit price."
+              />
+
+              <ProfitInput
+                label="Commission"
+                value={
+                  draftShipment.commissionAmount
+                }
+                onChange={(value) =>
+                  updateDraftField(
+                    "commissionAmount",
+                    value,
+                  )
+                }
+              />
+
+              <ProfitInput
+                label="Other Adjustment"
+                value={
+                  draftShipment.otherAdjustment
+                }
+                onChange={(value) =>
+                  updateDraftField(
+                    "otherAdjustment",
+                    value,
+                  )
+                }
+                allowNegative
+                note="Positive increases profit; negative reduces profit."
+              />
+            </div>
+          ) : null}
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ReceiptMetric
+              label="CI Sales Amount"
+              value={`${contract.currency} ${formatMoney(
+                invoiceAmount,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Calculated Purchase"
+              value={`${contract.currency} ${formatMoney(
+                calculatedPurchaseAmount,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Final Purchase"
+              value={`${contract.currency} ${formatMoney(
+                finalPurchaseAmount,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Claim"
+              value={`${contract.currency} ${formatMoney(
+                claimAmount,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Commission"
+              value={`${contract.currency} ${formatMoney(
+                commissionAmount,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="CI Bank Fee"
+              value={`${contract.currency} ${formatMoney(
+                calculatedBankFee,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Allocated PI Bank Fee"
+              value={`${contract.currency} ${formatMoney(
+                allocatedPiBankFee,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Other Adjustment"
+              value={`${contract.currency} ${formatMoney(
+                otherAdjustment,
+              )}`}
+            />
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl bg-black p-5 text-white">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">
+                Net Profit
+              </p>
+              <p className="mt-2 text-2xl font-semibold">
+                {contract.currency}{" "}
+                {formatMoney(netProfit)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-black/10 bg-[#fafafa] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/40">
+                Profit per MT
+              </p>
+              <p className="mt-2 text-2xl font-semibold">
+                {contract.currency}{" "}
+                {formatMoney(profitPerMt)}
+              </p>
+            </div>
+          </div>
         </section>
 
         <div className="mt-9 grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
