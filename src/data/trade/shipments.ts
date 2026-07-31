@@ -139,6 +139,17 @@ export type ShipmentRecord = {
    */
   claimAmount?: number;
 
+  /**
+   * Actual amount received from the customer
+   * for the amount due shown on this CI.
+   */
+  actualAmountReceived?: number;
+
+  /**
+   * Date the CI payment was received.
+   */
+  receivedDate?: string;
+
   containers: ShipmentContainer[];
 
   createdAt: string;

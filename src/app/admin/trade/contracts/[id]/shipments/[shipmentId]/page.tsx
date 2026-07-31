@@ -174,6 +174,25 @@ function normalizeDecimalInput(
 
   return normalized;
 }
+function ReceiptMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-black/10 bg-[#fafafa] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-black/40">
+        {label}
+      </p>
+      <p className="mt-2 text-base font-semibold">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export default function ShipmentDetailPage() {
   const params = useParams<{
     id: string;
@@ -341,6 +360,27 @@ export default function ShipmentDetailPage() {
         claimAmount,
       0,
     );
+
+  const actualAmountReceived =
+    Number(
+      displayedShipment
+        ?.actualAmountReceived,
+    ) || 0;
+
+  const calculatedBankFee =
+    actualAmountReceived > 0
+      ? Math.max(
+          balanceDue -
+            actualAmountReceived,
+          0,
+        )
+      : 0;
+
+  const overpaymentAmount =
+    actualAmountReceived > balanceDue
+      ? actualAmountReceived -
+        balanceDue
+      : 0;
 
   const documentWarnings =
     useMemo(() => {
@@ -929,6 +969,14 @@ export default function ShipmentDetailPage() {
             draftShipment.claimAmount,
           ) || 0,
 
+        actualAmountReceived:
+          draftShipment.actualAmountReceived ===
+          undefined
+            ? undefined
+            : Number(
+                draftShipment.actualAmountReceived,
+              ) || 0,
+
         containers:
   draftShipment.containers.map(
     (container) => {
@@ -1405,6 +1453,126 @@ export default function ShipmentDetailPage() {
             </ul>
           </section>
         ) : null}
+
+        <section className="mt-7 rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/40">
+                CI Receipt
+              </p>
+              <h2 className="mt-1 text-lg font-semibold">
+                Customer payment and bank fee
+              </h2>
+            </div>
+
+            <div className="rounded-xl bg-black/[0.04] px-4 py-2 text-sm font-semibold">
+              {contract.companyId === "hong-kong"
+                ? "HSBC Hong Kong"
+                : "d NEOBANK"}
+            </div>
+          </div>
+
+          {isEditing && draftShipment ? (
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                  Actual Amount Received
+                </span>
+
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={
+                    draftShipment.actualAmountReceived ??
+                    ""
+                  }
+                  onChange={(event) => {
+                    const cleanedValue =
+                      event.target.value
+                        .replace(/[^0-9.]/g, "")
+                        .replace(
+                          /^0+(?=\d)/,
+                          "",
+                        );
+
+                    updateDraftField(
+                      "actualAmountReceived",
+                      cleanedValue === ""
+                        ? undefined
+                        : Number(cleanedValue),
+                    );
+                  }}
+                  className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none focus:border-black"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                  Received Date
+                </span>
+
+                <input
+                  type="date"
+                  value={
+                    draftShipment.receivedDate ??
+                    ""
+                  }
+                  onChange={(event) =>
+                    updateDraftField(
+                      "receivedDate",
+                      event.target.value,
+                    )
+                  }
+                  className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none focus:border-black"
+                />
+              </label>
+            </div>
+          ) : null}
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ReceiptMetric
+              label="CI Amount Due"
+              value={`${contract.currency} ${formatMoney(
+                balanceDue,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Actual Received"
+              value={`${contract.currency} ${formatMoney(
+                actualAmountReceived,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label="Bank Fee"
+              value={`${contract.currency} ${formatMoney(
+                calculatedBankFee,
+              )}`}
+            />
+
+            <ReceiptMetric
+              label={
+                overpaymentAmount > 0
+                  ? "Unallocated Difference"
+                  : "Received Date"
+              }
+              value={
+                overpaymentAmount > 0
+                  ? `${contract.currency} ${formatMoney(
+                      overpaymentAmount,
+                    )}`
+                  : displayedShipment.receivedDate ||
+                    "Not received"
+              }
+            />
+          </div>
+
+          <p className="mt-4 text-xs text-black/45">
+            Bank Fee = the amount due printed on the CI minus
+            the actual amount received.
+          </p>
+        </section>
 
         <div className="mt-9 grid gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-7">
