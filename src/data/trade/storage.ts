@@ -68,6 +68,17 @@ export interface SavedContractDraft {
   depositAmount: number;
   balanceAmount: number;
 
+  /**
+   * Actual deposit amount received against
+   * the Amount Due printed on the PI.
+   */
+  actualDepositReceived?: number;
+
+  /**
+   * Date the PI deposit was received.
+   */
+  depositReceivedDate?: string;
+
   descriptionOfGoods: string;
 
   specificationImage?: string;

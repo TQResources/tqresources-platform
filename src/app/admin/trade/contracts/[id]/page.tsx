@@ -32,8 +32,45 @@ export default function ContractDetailPage() {
   const [isProcessingProformaInvoice, setIsProcessingProformaInvoice] =
     useState(false);
 
+  const [
+    actualDepositReceivedInput,
+    setActualDepositReceivedInput,
+  ] = useState("");
+
+  const [
+    depositReceivedDate,
+    setDepositReceivedDate,
+  ] = useState("");
+
+  const [
+    isSavingPiReceipt,
+    setIsSavingPiReceipt,
+  ] = useState(false);
+
   useEffect(() => {
-    setContract(getSavedContractDraft(String(params.id)));
+    const savedContract =
+      getSavedContractDraft(
+        String(params.id),
+      );
+
+    setContract(savedContract);
+
+    setActualDepositReceivedInput(
+      savedContract
+        ?.actualDepositReceived ===
+      undefined
+        ? ""
+        : String(
+            savedContract
+              .actualDepositReceived,
+          ),
+    );
+
+    setDepositReceivedDate(
+      savedContract
+        ?.depositReceivedDate ||
+        "",
+    );
 
     setLoaded(true);
   }, [params.id]);
@@ -173,6 +210,72 @@ export default function ContractDetailPage() {
     }
   }
 
+  function handleSavePiReceipt() {
+    if (!contract) {
+      return;
+    }
+
+    try {
+      setIsSavingPiReceipt(true);
+
+      const normalizedReceived =
+        actualDepositReceivedInput
+          .trim() === ""
+          ? undefined
+          : Number(
+              actualDepositReceivedInput,
+            );
+
+      if (
+        normalizedReceived !==
+          undefined &&
+        (
+          !Number.isFinite(
+            normalizedReceived,
+          ) ||
+          normalizedReceived < 0
+        )
+      ) {
+        window.alert(
+          "Actual Deposit Received must be a valid amount.",
+        );
+
+        return;
+      }
+
+      const updatedContract:
+        SavedContractDraft = {
+        ...contract,
+
+        actualDepositReceived:
+          normalizedReceived,
+
+        depositReceivedDate:
+          depositReceivedDate ||
+          undefined,
+
+        updatedAt:
+          new Date().toISOString(),
+      };
+
+      saveContractDraft(
+        updatedContract,
+      );
+
+      setContract(
+        updatedContract,
+      );
+    } catch (error) {
+      console.error(error);
+
+      window.alert(
+        "PI receipt could not be saved. Please check the browser console.",
+      );
+    } finally {
+      setIsSavingPiReceipt(false);
+    }
+  }
+
   function handleChangeStatus(
     nextStatus: SavedContractStatus,
   ) {
@@ -246,6 +349,34 @@ export default function ContractDetailPage() {
   const shipmentsHref = `/admin/trade/contracts/${contract.id}/shipments`;
 
   const documentWarnings = getContractDocumentWarnings(contract);
+
+  const piAmountDue =
+    Number(contract.depositAmount) ||
+    0;
+
+  const actualDepositReceived =
+    actualDepositReceivedInput
+      .trim() === ""
+      ? 0
+      : Number(
+          actualDepositReceivedInput,
+        ) || 0;
+
+  const piBankFee =
+    actualDepositReceived > 0
+      ? Math.max(
+          piAmountDue -
+            actualDepositReceived,
+          0,
+        )
+      : 0;
+
+  const piOverpayment =
+    actualDepositReceived >
+    piAmountDue
+      ? actualDepositReceived -
+        piAmountDue
+      : 0;
 
   return (
     <main className="min-h-screen bg-[#f5f6f8] text-black">
@@ -550,6 +681,151 @@ export default function ContractDetailPage() {
           )}
         </Section>
 
+        {Number(
+          contract.depositRate,
+        ) > 0 ? (
+          <section className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/40">
+                  PI Receipt
+                </p>
+
+                <h2 className="mt-1 text-xl font-semibold">
+                  Deposit payment and bank fee
+                </h2>
+
+                <p className="mt-2 text-sm text-black/50">
+                  Bank Fee = PI Amount Due − Actual Deposit Received
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-black/[0.04] px-4 py-2 text-sm font-semibold">
+                {contract.companyId ===
+                "hong-kong"
+                  ? "HSBC Hong Kong"
+                  : "d NEOBANK"}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                  Actual Deposit Received
+                </span>
+
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={
+                    actualDepositReceivedInput
+                  }
+                  onChange={(event) => {
+                    const cleanedValue =
+                      event.target.value
+                        .replace(
+                          /[^0-9.]/g,
+                          "",
+                        )
+                        .replace(
+                          /(\..*)\./g,
+                          "$1",
+                        )
+                        .replace(
+                          /^0+(?=\d)/,
+                          "",
+                        );
+
+                    setActualDepositReceivedInput(
+                      cleanedValue,
+                    );
+                  }}
+                  className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-black"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                  Received Date
+                </span>
+
+                <input
+                  type="date"
+                  value={
+                    depositReceivedDate
+                  }
+                  onChange={(event) =>
+                    setDepositReceivedDate(
+                      event.target.value,
+                    )
+                  }
+                  className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-black"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <PiReceiptMetric
+                label="PI Amount Due"
+                value={`${contract.currency} ${formatNumber(
+                  piAmountDue,
+                  2,
+                )}`}
+              />
+
+              <PiReceiptMetric
+                label="Actual Received"
+                value={`${contract.currency} ${formatNumber(
+                  actualDepositReceived,
+                  2,
+                )}`}
+              />
+
+              <PiReceiptMetric
+                label="PI Bank Fee"
+                value={`${contract.currency} ${formatNumber(
+                  piBankFee,
+                  2,
+                )}`}
+              />
+
+              <PiReceiptMetric
+                label={
+                  piOverpayment > 0
+                    ? "Unallocated Difference"
+                    : "Received Date"
+                }
+                value={
+                  piOverpayment > 0
+                    ? `${contract.currency} ${formatNumber(
+                        piOverpayment,
+                        2,
+                      )}`
+                    : depositReceivedDate ||
+                      "Not received"
+                }
+              />
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={
+                  handleSavePiReceipt
+                }
+                disabled={
+                  isSavingPiReceipt
+                }
+                className="rounded-xl bg-black px-6 py-3 text-sm font-semibold !text-white shadow-md transition hover:bg-neutral-800 disabled:cursor-wait disabled:opacity-45"
+              >
+                {isSavingPiReceipt
+                  ? "Saving..."
+                  : "Save PI Receipt"}
+              </button>
+            </div>
+          </section>
+        ) : null}
+
         <section className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
             <div>
@@ -652,6 +928,26 @@ export default function ContractDetailPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function PiReceiptMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-black/10 bg-[#fafafa] p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-black/40">
+        {label}
+      </p>
+
+      <p className="mt-2 text-base font-semibold">
+        {value}
+      </p>
+    </div>
   );
 }
 
