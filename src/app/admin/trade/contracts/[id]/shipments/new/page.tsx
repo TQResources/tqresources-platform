@@ -13,6 +13,11 @@ import {
 } from "next/navigation";
 
 import {
+  getBusinessPartnerById,
+  getFactoryOptions,
+} from "../../../../../../../data/trade/business-partners";
+
+import {
   getSavedContractDraft,
   type SavedContractDraft,
 } from "../../../../../../../data/trade/storage";
@@ -208,6 +213,30 @@ export default function NewShipmentPage() {
   ] = useState("");
 
   const [
+    factoryPartnerId,
+    setFactoryPartnerId,
+  ] = useState("");
+
+  const [
+    originCountry,
+    setOriginCountry,
+  ] = useState("");
+
+  const [
+    actualShipperLegalName,
+    setActualShipperLegalName,
+  ] = useState("");
+
+  const [
+    shipmentSourceStatus,
+    setShipmentSourceStatus,
+  ] = useState<
+    | "planned"
+    | "supplier-confirmed"
+    | "bl-confirmed"
+  >("planned");
+
+  const [
     billOfLadingNumber,
     setBillOfLadingNumber,
   ] = useState("");
@@ -259,8 +288,29 @@ export default function NewShipmentPage() {
 
     if (savedContract) {
       setPortOfLoading(
-        savedContract.loadingPort ||
+        savedContract.plannedLoadingPort ||
+          savedContract.loadingPort ||
           "",
+      );
+
+      setFactoryPartnerId(
+        savedContract.plannedFactoryPartnerId ||
+          "",
+      );
+
+      setOriginCountry(
+        savedContract.plannedOriginCountry ||
+          "",
+      );
+
+      setActualShipperLegalName(
+        savedContract.actualShipperLegalName ||
+          "",
+      );
+
+      setShipmentSourceStatus(
+        savedContract.shipmentSourceStatus ||
+          "planned",
       );
 
       setShipmentSequence(
@@ -695,6 +745,32 @@ export default function NewShipmentPage() {
 
       invoiceDate,
 
+      supplierPartnerId:
+        contract.supplierPartnerId,
+      supplierLegalName:
+        contract.supplierLegalName,
+      supplierShortName:
+        contract.supplierShortName,
+
+      factoryPartnerId:
+        factoryPartnerId || undefined,
+      factoryDisplayName:
+        getBusinessPartnerById(
+          factoryPartnerId,
+        )?.shortName,
+
+      actualShipperLegalName:
+        actualShipperLegalName
+          .trim()
+          .toUpperCase() ||
+        undefined,
+
+      originCountry:
+        originCountry.trim() ||
+        undefined,
+
+      shipmentSourceStatus,
+
       portOfLoading:
         portOfLoading
           .trim()
@@ -895,6 +971,124 @@ export default function NewShipmentPage() {
                     than the B/L issue
                     date.
                   </span>
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium">
+                    Actual Factory
+                  </span>
+
+                  <select
+                    value={factoryPartnerId}
+                    onChange={(event) => {
+                      const nextId =
+                        event.target.value;
+
+                      setFactoryPartnerId(
+                        nextId,
+                      );
+
+                      const factory =
+                        getBusinessPartnerById(
+                          nextId,
+                        );
+
+                      if (factory) {
+                        setOriginCountry(
+                          factory.country,
+                        );
+
+                        if (
+                          factory.defaultLoadingPort
+                        ) {
+                          setPortOfLoading(
+                            factory.defaultLoadingPort,
+                          );
+                        }
+                      }
+                    }}
+                    className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-black"
+                  >
+                    <option value="">
+                      To be confirmed
+                    </option>
+
+                    {getFactoryOptions(
+                      contract.supplierPartnerId,
+                    ).map((factory) => (
+                      <option
+                        key={factory.id}
+                        value={factory.id}
+                      >
+                        {factory.shortName}
+                        {" — "}
+                        {factory.country}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium">
+                    Origin Country
+                  </span>
+
+                  <input
+                    value={originCountry}
+                    onChange={(event) =>
+                      setOriginCountry(
+                        event.target.value,
+                      )
+                    }
+                    className="mt-2 w-full rounded-xl border border-black/15 px-4 py-3 outline-none transition focus:border-black"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium">
+                    Actual Shipper Legal Name
+                  </span>
+
+                  <input
+                    value={
+                      actualShipperLegalName
+                    }
+                    onChange={(event) =>
+                      setActualShipperLegalName(
+                        event.target.value,
+                      )
+                    }
+                    className="mt-2 w-full rounded-xl border border-black/15 px-4 py-3 uppercase outline-none transition focus:border-black"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium">
+                    Source Status
+                  </span>
+
+                  <select
+                    value={shipmentSourceStatus}
+                    onChange={(event) =>
+                      setShipmentSourceStatus(
+                        event.target.value as
+                          | "planned"
+                          | "supplier-confirmed"
+                          | "bl-confirmed",
+                      )
+                    }
+                    className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none transition focus:border-black"
+                  >
+                    <option value="planned">
+                      Planned
+                    </option>
+                    <option value="supplier-confirmed">
+                      Supplier Confirmed
+                    </option>
+                    <option value="bl-confirmed">
+                      BL Confirmed
+                    </option>
+                  </select>
                 </label>
 
                 <label className="block">

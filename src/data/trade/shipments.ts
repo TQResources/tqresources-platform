@@ -77,6 +77,21 @@ export type ShipmentRecord = {
   commercialInvoiceNumber: string;
   invoiceDate: string;
 
+  supplierPartnerId?: string;
+  supplierLegalName?: string;
+  supplierShortName?: string;
+
+  factoryPartnerId?: string;
+  factoryDisplayName?: string;
+
+  actualShipperLegalName?: string;
+  originCountry?: string;
+
+  shipmentSourceStatus?:
+    | "planned"
+    | "supplier-confirmed"
+    | "bl-confirmed";
+
   /**
    * Actual port shown on the B/L.
    */
