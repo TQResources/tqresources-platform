@@ -31,6 +31,22 @@ export interface SavedContractDraft {
   consigneeName: string;
   consigneeAddress: string;
 
+  supplierPartnerId?: string;
+  supplierLegalName?: string;
+  supplierShortName?: string;
+
+  plannedFactoryPartnerId?: string;
+  plannedFactoryName?: string;
+  plannedOriginCountry?: string;
+  plannedLoadingPort?: string;
+
+  actualShipperLegalName?: string;
+
+  shipmentSourceStatus?:
+    | "planned"
+    | "supplier-confirmed"
+    | "bl-confirmed";
+
   productId: string;
   material: string;
   hsCode: string;
@@ -54,6 +70,8 @@ export interface SavedContractDraft {
 
   descriptionOfGoods: string;
 
+  specificationImage?: string;
+
   clauses: SavedContractClause[];
 
   proformaInvoiceNumber: string;
@@ -70,6 +88,42 @@ const STORAGE_KEY =
 
 function isBrowser() {
   return typeof window !== "undefined";
+}
+
+function normalizeSavedContractDraft(
+  draft: SavedContractDraft,
+): SavedContractDraft {
+  if (draft.contractNumber !== "10008") {
+    return draft;
+  }
+
+  return {
+    ...draft,
+    supplierPartnerId:
+      draft.supplierPartnerId ??
+      "gravita-netherlands",
+    supplierLegalName:
+      draft.supplierLegalName ??
+      "GRAVITA NETHERLANDS BV",
+    supplierShortName:
+      draft.supplierShortName ??
+      "Gravita NL",
+    plannedFactoryPartnerId:
+      draft.plannedFactoryPartnerId ??
+      "gravita-factory-mozambique",
+    plannedFactoryName:
+      draft.plannedFactoryName ??
+      "GRAVITA Mozambique Factory",
+    plannedOriginCountry:
+      draft.plannedOriginCountry ??
+      "Mozambique",
+    plannedLoadingPort:
+      draft.plannedLoadingPort ??
+      "Maputo, Mozambique",
+    shipmentSourceStatus:
+      draft.shipmentSourceStatus ??
+      "planned",
+  };
 }
 
 export function getSavedContractDrafts(): SavedContractDraft[] {
@@ -89,7 +143,11 @@ export function getSavedContractDrafts(): SavedContractDraft[] {
     const parsed = JSON.parse(raw);
 
     return Array.isArray(parsed)
-      ? parsed
+      ? parsed.map((draft) =>
+          normalizeSavedContractDraft(
+            draft as SavedContractDraft,
+          ),
+        )
       : [];
   } catch {
     return [];

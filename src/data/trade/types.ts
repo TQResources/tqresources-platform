@@ -124,6 +124,31 @@ export interface CustomerContact {
   active: boolean;
 }
 
+export type BusinessPartnerRole =
+  | "customer"
+  | "supplier"
+  | "consignee"
+  | "shipper"
+  | "factory"
+  | "commission-agent";
+
+export interface BusinessPartnerProfile {
+  id: string;
+  legalName: string;
+  shortName: string;
+  groupName?: string;
+  parentPartnerId?: string;
+  country: string;
+  address: Address;
+  roles: BusinessPartnerRole[];
+  contacts: CustomerContact[];
+  legalNameStatus?: "confirmed" | "to-be-confirmed";
+  defaultLoadingPort?: string;
+  notes?: string;
+  active: boolean;
+}
+
+
 export interface CustomerDefaultSettings {
   currency: Currency;
   incoterm: Incoterm;
@@ -430,6 +455,8 @@ export interface TradeContract {
   arbitrationTerms?: string;
 
   requiredDocuments?: string[];
+
+  specificationImage?: string;
 
   status: ContractStatus;
 

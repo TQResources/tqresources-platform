@@ -1,9 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useMemo, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type ClipboardEvent,
+  type ReactNode,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import {
+  getBusinessPartnerById,
+  getFactoryOptions,
+  getSupplierOptions,
+} from "../../../../data/trade/business-partners";
 import { getCompanyById } from "../../../../data/trade/companies";
 import { getCustomerById } from "../../../../data/trade/customers";
 import { getProductById } from "../../../../data/trade/products";
@@ -92,11 +105,15 @@ function NewTradeContractPageContent() {
   const [
     contractNumber,
     setContractNumber,
-  ] = useState(() =>
-    getNextBusinessNumber(
-      businessType,
-    ),
-  );
+  ] = useState("");
+
+  useEffect(() => {
+    setContractNumber(
+      getNextBusinessNumber(
+        businessType,
+      ),
+    );
+  }, [businessType]);
 
   const defaults = useMemo(() => {
     const customerDefaults = customer?.defaultSettings;
@@ -178,30 +195,18 @@ function NewTradeContractPageContent() {
   }, [customer, product, profile]);
 
   const defaultClauses = useMemo(() => {
-    const documents =
-      defaults.requiredDocuments.length > 0
-        ? `Documents: ${defaults.requiredDocuments.join(", ")}.`
-        : "";
-
     const items = [
-      "Partial shipment and transshipment: Allowed.",
-
+      "Partial shipment and Transshipment: Allowed",
       defaults.quantityTolerance
-        ? `Quantity tolerance: ${defaults.quantityTolerance}.`
-        : "",
-
-      defaults.shipmentTerms ? `Shipment time: ${defaults.shipmentTerms}` : "",
-
-      documents,
-
-      defaults.packaging ? `Packing: ${defaults.packaging}.` : "",
-
-      defaults.paymentTerms ? `Payment term: ${defaults.paymentTerms}` : "",
-
-      defaults.qualityTerms ? `Quality: ${defaults.qualityTerms}` : "",
-
-      defaults.claimTerms,
-    ].filter((item): item is string => Boolean(item));
+        ? `Quantity Tolerance: ${defaults.quantityTolerance}`
+        : "Quantity Tolerance: +/-10%",
+      defaults.shipmentTerms
+        ? `Delivery Date: ${defaults.shipmentTerms}`
+        : "Delivery Date: Within the mutually agreed delivery period.",
+      defaults.requiredDocuments.length > 0
+        ? `Documents: ${defaults.requiredDocuments.join(", ")}`
+        : "Documents: Invoice, Packing List, Loading Pictures, Analysis Report, Bill of Lading, Certificate of Origin",
+    ];
 
     return items.map((content, index) => makeClause(content, index));
   }, [defaults]);
@@ -242,9 +247,44 @@ function NewTradeContractPageContent() {
     defaults.consigneeAddress,
   );
 
+  const supplierOptions = getSupplierOptions();
+
+  const [supplierPartnerId, setSupplierPartnerId] =
+    useState("gravita-netherlands");
+
+  const selectedSupplier =
+    getBusinessPartnerById(supplierPartnerId);
+
+  const factoryOptions =
+    getFactoryOptions(supplierPartnerId);
+
+  const [plannedFactoryPartnerId, setPlannedFactoryPartnerId] =
+    useState("gravita-factory-mozambique");
+
+  const selectedFactory =
+    getBusinessPartnerById(plannedFactoryPartnerId);
+
+  const [plannedOriginCountry, setPlannedOriginCountry] =
+    useState("Mozambique");
+
+  const [plannedLoadingPort, setPlannedLoadingPort] =
+    useState("Maputo, Mozambique");
+
+  const [actualShipperLegalName, setActualShipperLegalName] =
+    useState("");
+
+  const [shipmentSourceStatus, setShipmentSourceStatus] =
+    useState<
+      "planned" |
+      "supplier-confirmed" |
+      "bl-confirmed"
+    >("planned");
+
   const [descriptionOfGoods, setDescriptionOfGoods] = useState(
     defaults.descriptionOfGoods,
   );
+
+  const [specificationImage, setSpecificationImage] = useState("");
 
   const [clauses, setClauses] = useState<EditableClause[]>(defaultClauses);
 
@@ -307,6 +347,46 @@ function NewTradeContractPageContent() {
       return next;
     });
   }
+  function readSpecificationImage(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setValidationErrors(["Specification must be an image file."]);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setSpecificationImage(String(reader.result ?? ""));
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function handleSpecificationFileChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      readSpecificationImage(file);
+    }
+  }
+
+  function handleSpecificationPaste(
+    event: ClipboardEvent<HTMLDivElement>,
+  ) {
+    const imageItem = Array.from(event.clipboardData.items).find(
+      (item) => item.type.startsWith("image/"),
+    );
+
+    const file = imageItem?.getAsFile();
+
+    if (file) {
+      event.preventDefault();
+      readSpecificationImage(file);
+    }
+  }
+
   function handleSaveDraft() {
     const errors: string[] = [];
 
@@ -430,6 +510,22 @@ function NewTradeContractPageContent() {
       consigneeName,
       consigneeAddress,
 
+      supplierPartnerId,
+      supplierLegalName:
+        selectedSupplier?.legalName || "",
+      supplierShortName:
+        selectedSupplier?.shortName || "",
+
+      plannedFactoryPartnerId,
+      plannedFactoryName:
+        selectedFactory?.shortName || "",
+      plannedOriginCountry,
+      plannedLoadingPort,
+
+      actualShipperLegalName:
+        actualShipperLegalName.trim(),
+      shipmentSourceStatus,
+
       productId,
       material,
       hsCode,
@@ -453,6 +549,8 @@ function NewTradeContractPageContent() {
       balanceAmount,
 
       descriptionOfGoods,
+
+      specificationImage,
 
       clauses: clauses
         .filter((clause) => clause.content.trim())
@@ -603,6 +701,115 @@ function NewTradeContractPageContent() {
             </div>
           </Card>
 
+          <Card
+            eyebrow="Shared business partner"
+            title="Supply source planning"
+          >
+            <div className="grid gap-5 md:grid-cols-2">
+              <SelectField
+                label="Contract Supplier"
+                value={supplierPartnerId}
+                onChange={(value) => {
+                  setSupplierPartnerId(value);
+
+                  const firstFactory =
+                    getFactoryOptions(value)[0];
+
+                  if (firstFactory) {
+                    setPlannedFactoryPartnerId(
+                      firstFactory.id,
+                    );
+                    setPlannedOriginCountry(
+                      firstFactory.country,
+                    );
+                    setPlannedLoadingPort(
+                      firstFactory.defaultLoadingPort ?? "",
+                    );
+                  }
+                }}
+                options={supplierOptions.map((partner) => [
+                  partner.id,
+                  `${partner.shortName} — ${partner.legalName}`,
+                ])}
+              />
+
+              <ReadOnlyField
+                label="Supplier Sales Email"
+                value={
+                  selectedSupplier?.contacts.find(
+                    (contact) => contact.active,
+                  )?.email || ""
+                }
+              />
+
+              <SelectField
+                label="Planned Factory"
+                value={plannedFactoryPartnerId}
+                onChange={(value) => {
+                  setPlannedFactoryPartnerId(value);
+
+                  const factory =
+                    getBusinessPartnerById(value);
+
+                  if (factory) {
+                    setPlannedOriginCountry(
+                      factory.country,
+                    );
+                    setPlannedLoadingPort(
+                      factory.defaultLoadingPort ?? "",
+                    );
+                  }
+                }}
+                options={factoryOptions.map((partner) => [
+                  partner.id,
+                  `${partner.shortName} — ${partner.country}`,
+                ])}
+              />
+
+              <SelectField
+                label="Shipment Source Status"
+                value={shipmentSourceStatus}
+                onChange={(value) =>
+                  setShipmentSourceStatus(
+                    value as
+                      | "planned"
+                      | "supplier-confirmed"
+                      | "bl-confirmed",
+                  )
+                }
+                options={[
+                  ["planned", "Planned"],
+                  ["supplier-confirmed", "Supplier Confirmed"],
+                  ["bl-confirmed", "BL Confirmed"],
+                ]}
+              />
+
+              <Field
+                label="Planned Origin Country"
+                value={plannedOriginCountry}
+                onChange={setPlannedOriginCountry}
+              />
+
+              <Field
+                label="Planned Loading Port"
+                value={plannedLoadingPort}
+                onChange={setPlannedLoadingPort}
+              />
+
+              <Field
+                label="Actual Shipper Legal Name"
+                value={actualShipperLegalName}
+                onChange={setActualShipperLegalName}
+              />
+
+              <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                Business partner data is shared by the Japan and
+                Hong Kong companies. Each contract still keeps its
+                own companyId, so reporting remains separate.
+              </div>
+            </div>
+          </Card>
+
           <Card eyebrow="Goods and price" title="Commercial details">
             <div className="grid gap-5 md:grid-cols-2">
               <Field label="Material" value={material} onChange={setMaterial} />
@@ -688,6 +895,52 @@ function NewTradeContractPageContent() {
               onChange={setDescriptionOfGoods}
               rows={5}
             />
+          </Card>
+
+          <Card
+            eyebrow="Flexible specification"
+            title="Composition / Specification Image"
+          >
+            <div
+              tabIndex={0}
+              onPaste={handleSpecificationPaste}
+              className="rounded-xl border border-dashed border-black/25 bg-black/[0.015] p-5 outline-none transition focus:border-black focus:bg-white"
+            >
+              <p className="text-sm font-semibold">
+                Paste a screenshot here, or select an image file
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-black/55">
+                Click inside this box and press Command + V to paste a
+                composition table screenshot. The image will be stored with
+                this contract and shown in the Sales Contract PDF.
+              </p>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleSpecificationFileChange}
+                className="mt-4 block w-full text-sm"
+              />
+
+              {specificationImage ? (
+                <div className="mt-5">
+                  <img
+                    src={specificationImage}
+                    alt="Composition specification preview"
+                    className="max-h-[320px] max-w-full rounded-lg border border-black/10 bg-white object-contain"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setSpecificationImage("")}
+                    className="mt-3 rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </Card>
 
           <Card eyebrow="Flexible clauses" title="Other Terms and Conditions">
