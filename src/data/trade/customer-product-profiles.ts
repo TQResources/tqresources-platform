@@ -16,37 +16,37 @@ export const customerProductProfiles:
         "adc12-aluminum-alloy-ingot",
 
       customProductName:
-        "ADC12 Aluminum Alloy Ingots",
+        "ALUMINIUM ALLOY INGOT",
 
       customContractDescription:
-        "ADC12 Aluminum Alloy Ingots complying with the mutually agreed chemical composition and specifications.",
+        "Aluminium Alloy Ingot complying with the mutually agreed chemical composition and specifications.",
 
       customInvoiceDescription:
-        "ADC12 Aluminum Alloy Ingots",
+        "ALUMINIUM ALLOY INGOT",
 
       settings: {
         currency: "USD",
-        incoterm: "CIF",
+        incoterm: "CFR",
 
-        loadingPort: "",
-        destinationPort: "Ningbo, China",
+        loadingPort: "Any Port, Cambodia",
+        destinationPort: "Ningbo Port, China",
 
-        depositRate: 15,
+        depositRate: 20,
 
         paymentTerms:
-          "15% of the total contract value shall be paid as deposit by T/T. The balance shall be paid against copy of shipping documents.",
+          "20% deposit by T/T and 80% balance by T/T against scan of shipping documents.",
 
         shipmentTerms:
-          "Shipment shall be made within the period mutually agreed by both parties.",
+          "Within the mutually agreed delivery period.",
 
         packaging:
-          "Packed in bundles suitable for containerized sea transportation.",
+          "Loose loading or export packing as mutually agreed.",
 
         quantityTolerance:
-          "±5% at seller's option.",
+          "+/-10%",
 
         qualityTerms:
-          "The goods shall comply with the mutually agreed ADC12 chemical composition.",
+          "The goods shall comply with the mutually agreed chemical composition and specifications.",
 
         inspectionTerms:
           "Quality and quantity shall be determined at the port of loading.",
@@ -58,15 +58,17 @@ export const customerProductProfiles:
           "Any dispute arising from or in connection with this contract shall be submitted to arbitration in Hong Kong.",
 
         requiredDocuments: [
-          "Signed Commercial Invoice",
+          "Invoice",
           "Packing List",
-          "Full set of clean on-board Bill of Lading",
+          "Loading Pictures",
           "Analysis Report",
+          "Bill of Lading",
+          "Certificate of Origin",
         ],
       },
 
       notes:
-        "Default profile for Ningbo Juzhou ADC12 transactions issued by the Japan company.",
+        "Formal Ningbo Juzhou contract profile. Replaces the initial temporary setup.",
 
       active: true,
     },

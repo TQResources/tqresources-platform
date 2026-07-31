@@ -14,7 +14,7 @@ export const products: ProductProfile[] = [
 
     category: "aluminum",
 
-    hsCode: "",
+    hsCode: "76012000",
 
     originCountry: "",
 

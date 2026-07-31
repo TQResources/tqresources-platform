@@ -251,10 +251,12 @@ titleSpacer: {
 
 leftMetaBox: {
   width: "25%",
-  alignItems: "flex-start",
+  flexDirection: "row",
+  alignItems: "center",
 },
 
 leftMetaLabel: {
+  width: 30,
   fontSize: 5.45,
   fontWeight: 700,
   color: COLORS.muted,
@@ -262,7 +264,7 @@ leftMetaLabel: {
 },
 
 leftMetaValue: {
-  marginTop: 3,
+  marginLeft: 1,
   fontSize: 7.6,
   fontWeight: 700,
   color: COLORS.ink,
@@ -314,8 +316,10 @@ metaRow: {
 },
 
 metaLabel: {
-  width: 84,
+  width: 64,
   textAlign: "right",
+  position: "relative",
+  left: 42,
   fontSize: 6.2,
   fontWeight: 700,
   color: COLORS.muted,
@@ -324,7 +328,7 @@ metaLabel: {
 },
 
 metaValue: {
-  width: 82,
+  width: 118,
   textAlign: "right",
   fontSize: 7.5,
   fontWeight: 700,

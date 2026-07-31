@@ -281,8 +281,10 @@ metaRow: {
 },
 
 metaLabel: {
-  width: 84,
+  width: 64,
   textAlign: "right",
+  position: "relative",
+  left: 42,
   fontSize: 6.2,
   fontWeight: 700,
   color: COLORS.muted,
@@ -291,7 +293,7 @@ metaLabel: {
 },
 
 metaValue: {
-  width: 82,
+  width: 118,
   textAlign: "right",
   fontSize: 7.5,
   fontWeight: 700,
@@ -499,6 +501,26 @@ metaValue: {
     fontSize: 7.35,
     lineHeight: 1.4,
     color: COLORS.text,
+  },
+
+  specificationSection: {
+    marginBottom: 3,
+  },
+
+  specificationBox: {
+    paddingLeft: 23,
+    paddingRight: 5,
+    alignItems: "flex-start",
+    marginTop: 1,
+    overflow: "hidden",
+  },
+
+  specificationImage: {
+    width: "101.5%",
+    height: 55,
+    marginRight: -8,
+    objectFit: "contain",
+    objectPosition: "left top",
   },
 
   /* Clauses */
@@ -1235,11 +1257,33 @@ export default function SalesContractPdf({
           </View>
         </View>
 
+        {/* Specification Image */}
+
+        {contract.specificationImage ? (
+          <View style={styles.specificationSection}>
+            <SectionHeading
+              number="03"
+              title={
+                isJapan
+                  ? "SPECIFICATION / 成分表"
+                  : "SPECIFICATION"
+              }
+            />
+
+            <View style={styles.specificationBox}>
+              <Image
+                src={contract.specificationImage}
+                style={styles.specificationImage}
+              />
+            </View>
+          </View>
+        ) : null}
+
         {/* Terms */}
 
         <View style={styles.termsSection}>
           <SectionHeading
-            number="03"
+            number={contract.specificationImage ? "04" : "03"}
             title={
               isJapan
                 ? "TERMS AND CONDITIONS / 契約条項"

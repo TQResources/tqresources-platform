@@ -415,6 +415,117 @@ export function getCurrentNumberingCounters():
     }
   }
 
+  /*
+   * Recalculate all next numbers from records that currently exist.
+   * Deleting a draft releases its number for reuse.
+   */
+  const existingRecords = readStoredContracts();
+
+  const usedJapanContractNumbers = new Set<number>();
+  const usedJapanDomesticNumbers = new Set<number>();
+  const usedAgencyTotalNumbers = new Set<number>();
+  const usedHongKongTotalNumbers = new Set<number>();
+
+  for (const record of existingRecords) {
+    if (record.businessType === "agency") {
+      const agencyNumber = parsePositiveInteger(
+        record.contractNumber,
+      );
+
+      if (agencyNumber !== null) {
+        usedAgencyTotalNumbers.add(agencyNumber);
+      }
+
+      continue;
+    }
+
+    if (isJapanMetalContract(record)) {
+      const number = parsePositiveInteger(
+        record.contractNumber,
+      );
+
+      if (number !== null) {
+        usedJapanContractNumbers.add(number);
+      }
+
+      continue;
+    }
+
+    if (isJapanDomesticContract(record)) {
+      const number = parsePositiveInteger(
+        record.contractNumber,
+      );
+
+      if (number !== null) {
+        usedJapanDomesticNumbers.add(number);
+      }
+
+      continue;
+    }
+
+    if (isHongKongContract(record)) {
+      const parsed = parseHongKongContractNumber(
+        record.contractNumber,
+      );
+
+      if (parsed) {
+        usedHongKongTotalNumbers.add(
+          parsed.totalBusinessNumber,
+        );
+      }
+    }
+  }
+
+  nextJapanContractNumber = 10008;
+
+  while (
+    usedJapanContractNumbers.has(
+      nextJapanContractNumber,
+    )
+  ) {
+    nextJapanContractNumber += 1;
+  }
+
+  nextJapanDomesticContractNumber = 2;
+
+  while (
+    usedJapanDomesticNumbers.has(
+      nextJapanDomesticContractNumber,
+    )
+  ) {
+    nextJapanDomesticContractNumber += 1;
+  }
+
+  nextTotalBusinessNumber = 251;
+  nextHongKongContractNumber = 155;
+
+  /*
+   * Hong Kong contracts and agency business share
+   * the total-business sequence.
+   *
+   * An agency record consumes only the total number.
+   * A Hong Kong contract consumes both the total
+   * number and the Hong Kong contract sequence.
+   */
+  while (
+    usedAgencyTotalNumbers.has(
+      nextTotalBusinessNumber,
+    ) ||
+    usedHongKongTotalNumbers.has(
+      nextTotalBusinessNumber,
+    )
+  ) {
+    if (
+      usedHongKongTotalNumbers.has(
+        nextTotalBusinessNumber,
+      )
+    ) {
+      nextHongKongContractNumber += 1;
+    }
+
+    nextTotalBusinessNumber += 1;
+  }
+
   const reconciledCounters:
     NumberingCounters = {
     nextJapanContractNumber,

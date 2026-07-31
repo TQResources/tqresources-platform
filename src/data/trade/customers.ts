@@ -4,16 +4,16 @@ export const customers: CustomerProfile[] = [
   {
     id: "ningbo-juzhou",
 
-    legalName: "NINGBO JUZHOU",
+    legalName: "NINGBO JUZHOU MATERIALS CO., LTD",
     shortName: "Ningbo Juzhou",
 
     country: "China",
 
     address: {
-      line1: "",
-      line2: "",
-      city: "Ningbo",
-      country: "China",
+      line1: "1188 PINGHAI ROAD, ZHAOBAOSHAN STREET",
+      line2: "ZHENHAI DISTRICT, NINGBO, ZHEJIANG",
+      city: "",
+      country: "CHINA",
     },
 
     registrationNumber: "",
@@ -24,7 +24,7 @@ export const customers: CustomerProfile[] = [
         name: "",
         position: "",
         email: "",
-        phone: "",
+        phone: "0579-87668665",
         active: true,
       },
     ],
@@ -36,10 +36,10 @@ export const customers: CustomerProfile[] = [
       loadingPort: "",
       destinationPort: "Ningbo, China",
 
-      depositRate: 15,
+      depositRate: 20,
 
       paymentTerms:
-        "15% deposit by T/T, balance payable against copy of shipping documents.",
+        "20% deposit by T/T and 80% balance by T/T against scan of shipping documents.",
 
       shipmentTerms:
         "Shipment shall be made within the period mutually agreed by both parties.",
