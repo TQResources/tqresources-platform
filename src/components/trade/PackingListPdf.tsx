@@ -18,6 +18,7 @@ import {
 } from "../../data/trade/shipments";
 
 import { getCustomerById } from "../../data/trade/customers";
+import { TradePdfHeader } from "./TradePdfHeader";
 
 type PackingListPdfProps = {
   contract: SavedContractDraft;
@@ -116,6 +117,7 @@ const styles = StyleSheet.create({
 
   japanCompanyBlock: {
     width: "60%",
+    minHeight: 58,
     alignItems: "flex-start",
   },
 
@@ -127,33 +129,40 @@ const styles = StyleSheet.create({
   },
 
   japanContactLine: {
+    marginTop: "auto",
     fontSize: 6.55,
     color: COLORS.muted,
     textAlign: "left",
-    lineHeight: 1.28,
-    marginTop: 2,
+    lineHeight: 1.2,
   },
 
   japanLogoBlock: {
     width: "37%",
+    minHeight: 58,
     alignItems: "flex-end",
-    justifyContent: "flex-start",
-    marginTop: -5,
+    justifyContent: "space-between",
+    paddingTop: 0,
+    marginTop: 0,
   },
 
   japanLogo: {
-    width: 154,
-    height: 46,
+    width: 108,
+    height: 31,
     objectFit: "contain",
     objectPosition: "right center",
   },
 
+  japanLogoContacts: {
+    marginTop: "auto",
+    alignItems: "flex-end",
+  },
+
   japanLogoContact: {
-    marginTop: 2,
+    marginTop: 1,
     fontSize: 6.25,
     color: COLORS.muted,
     textAlign: "right",
-    lineHeight: 1.2,
+    lineHeight: 1.12,
   },
 
   content: {
@@ -372,7 +381,7 @@ const styles = StyleSheet.create({
   },
 
   metaLabel: {
-    width: 73,
+    left: 8,    position: "relative",    width: 73,
     textAlign: "right",
     fontSize: 5.9,
     fontWeight: 700,
@@ -853,12 +862,31 @@ const styles = StyleSheet.create({
 
   /* Fixed signature */
 
+  japanSignatureSection: {
+    bottom: 29,
+    height: 104,
+  },
+
+  japanStampImage: {
+    left: 12,
+    bottom: 8,
+    width: 72,
+    height: 72,
+  },
+
+  japanSignatureImage: {
+    left: 94,
+    bottom: 27,
+    width: 83,
+    height: 33,
+  },
+
   signatureSection: {
     position: "absolute",
     left: 34,
-    bottom: 38,
+    bottom: 29,
     width: 255,
-    height: 100,
+    height: 108,
   },
 
   signatureBox: {
@@ -883,10 +911,10 @@ const styles = StyleSheet.create({
 
   stampImage: {
     position: "absolute",
-    left: 16,
-    bottom: 14,
-    width: 53,
-    height: 53,
+    left: 14,
+    bottom: 8,
+    width: 72,
+    height: 72,
     objectFit: "contain",
   },
 
@@ -1090,7 +1118,7 @@ function addressLinesFromCustomer(
   fallback: string,
 ) {
   if (customer) {
-    return [
+    const address = [
       customer.address.line1,
       customer.address.line2,
       customer.address.city,
@@ -1098,13 +1126,19 @@ function addressLinesFromCustomer(
       customer.address.country,
     ]
       .map((item) => item?.trim())
-      .filter((item): item is string => Boolean(item));
+      .filter((item): item is string => Boolean(item))
+      .join(", ");
+
+    return address ? [address] : [];
   }
 
-  return fallback
+  const address = fallback
     .split(/\r?\n|,/)
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .join(", ");
+
+  return address ? [address] : [];
 }
 
 function addressLinesFromText(value: string) {
@@ -1310,127 +1344,34 @@ const grossWeightDecimalPlaces =
       subject="Packing List"
     >
       <Page
-        size="A4"
+        size={[595.28, 841.89]}
         orientation="portrait"
         style={[styles.page, isJapan ? styles.japanesePage : {}]}
-        wrap={false}
+        wrap
       >
         <View style={contentStyle}>
           {/* Header */}
+        <TradePdfHeader
+          seller={seller}
+          logoSrc={publicAsset(assets.logo)}
+          isJapan={isJapan}
+        />
 
-          <View style={styles.header}>
-            {isJapan ? (
-              <View style={styles.headerContent}>
-                <View style={styles.japanCompanyBlock}>
-                  <Text style={styles.companyName}>
-                    {seller.name}
-                  </Text>
+        {/* Title */}
 
-                  <Text style={styles.companyName}>
-                    {JAPAN_SELLER.localName}
-                  </Text>
+          <View
+            style={[
+              styles.titleSection,
 
-                  {seller.headerAddressLines.map(
-                    (line, index) => (
-                      <Text
-                        key={`header-address-${index}`}
-                        style={styles.japanCompanyAddress}
-                      >
-                        {index === 0 ? (
-                          <Text style={styles.companyContactLabel}>
-                            ADDRESS:{" "}
-                          </Text>
-                        ) : null}
-                        {line}
-                      </Text>
-                    ),
-                  )}
+              isCompact
+                ? styles.titleSectionCompact
+                : {},
 
-                  <Text style={styles.japanContactLine}>
-                    <Text style={styles.companyContactLabel}>
-                      TEL:{" "}
-                    </Text>
-                    {seller.telephone}
-                  </Text>
-                </View>
-
-                <View style={styles.japanLogoBlock}>
-                  <Image
-                    src={publicAsset(assets.logo)}
-                    style={styles.japanLogo}
-                  />
-
-                  <Text style={styles.japanLogoContact}>
-                    <Text style={styles.companyContactLabel}>
-                      EMAIL:{" "}
-                    </Text>
-                    {seller.email}
-                  </Text>
-
-                  <Text style={styles.japanLogoContact}>
-                    <Text style={styles.companyContactLabel}>
-                      WEBSITE:{" "}
-                    </Text>
-                    {seller.website}
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.headerContent}>
-                <View style={styles.logoBlock}>
-                  <Image
-                    src={publicAsset(assets.logo)}
-                    style={styles.logo}
-                  />
-                </View>
-
-                <View style={styles.companyBlock}>
-                  <Text style={styles.companyName}>
-                    {seller.name}
-                  </Text>
-
-                  {seller.headerAddressLines.map(
-                    (line, index) => (
-                      <Text
-                        key={`header-address-${index}`}
-                        style={styles.companyAddress}
-                      >
-                        <Text style={styles.companyContactLabel}>
-                          {index === 0
-                            ? "ADDRESS: "
-                            : ""}
-                        </Text>
-                        {line}
-                      </Text>
-                    ),
-                  )}
-
-                  <Text style={styles.companyContactLine}>
-                    <Text style={styles.companyContactLabel}>
-                      TEL:{" "}
-                    </Text>
-                    {seller.telephone}
-                    {"   ·   "}
-                    <Text style={styles.companyContactLabel}>
-                      EMAIL:{" "}
-                    </Text>
-                    {seller.email}
-                  </Text>
-
-                  <Text style={styles.companyContactLine}>
-                    <Text style={styles.companyContactLabel}>
-                      WEBSITE:{" "}
-                    </Text>
-                    {seller.website}
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-
-          {/* Title */}
-
-          <View style={styles.titleSection}>
+              isVeryCompact
+                ? styles.titleSectionVeryCompact
+                : {},
+            ]}
+          >
             {isJapan ? (
               <View style={styles.leftMetaBox}>
                 <Text style={styles.leftMetaLabel}>
@@ -2329,7 +2270,7 @@ const grossWeightDecimalPlaces =
                     : {},
                 ]}
               >
-                LOOSE / AS PER BILL OF LADING
+                BUNDLES / AS PER BILL OF LADING
               </Text>
             </View>
           </View>
@@ -2339,7 +2280,12 @@ const grossWeightDecimalPlaces =
 
         <View
           style={
-            styles.signatureSection
+            isJapan
+              ? [
+                  styles.signatureSection,
+                  styles.japanSignatureSection,
+                ]
+              : styles.signatureSection
           }
           fixed
         >
@@ -2369,7 +2315,12 @@ const grossWeightDecimalPlaces =
                 assets.stamp,
               )}
               style={
-                styles.stampImage
+                isJapan
+                  ? [
+                      styles.stampImage,
+                      styles.japanStampImage,
+                    ]
+                  : styles.stampImage
               }
             />
 
@@ -2378,7 +2329,12 @@ const grossWeightDecimalPlaces =
                 assets.signature,
               )}
               style={
-                styles.signatureImage
+                isJapan
+                  ? [
+                      styles.signatureImage,
+                      styles.japanSignatureImage,
+                    ]
+                  : styles.signatureImage
               }
             />
 

@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { getSavedFactories, saveFactoryName } from "../../../../data/trade/saved-factories";
 import {
   getBusinessPartnerById,
   getFactoryOptions,
@@ -39,6 +40,7 @@ import {
   type BusinessType,
 } from "../../../../data/trade/numbering";
 import {
+  getSavedContractDraft,
   saveContractDraft,
   type SavedContractDraft,
 } from "../../../../data/trade/storage";
@@ -84,6 +86,8 @@ function NewTradeContractPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const editId = searchParams.get("editId");
+
   const businessType =
     (searchParams.get("businessType") as BusinessType) || "hong-kong-contract";
 
@@ -101,6 +105,17 @@ function NewTradeContractPageContent() {
   const product = getProductById(productId);
 
   const profile = getCustomerProductProfile(companyId, customerId, productId);
+
+  const isDeltaOffGrade =
+    companyId === "japan" &&
+    customerId === "delta-metal-changchun" &&
+    productId === "off-grade-aluminum-alloy-ingot";
+
+
+  const isShenzhenGechuang =
+    companyId === "hong-kong" &&
+    customerId === "shenzhen-gechuang-aluminum" &&
+    productId === "off-grade-aluminum-alloy-ingot";
 
   const [
     contractNumber,
@@ -188,28 +203,60 @@ function NewTradeContractPageContent() {
 
       buyerAddress,
 
-      consigneeName: customer?.legalName ?? "",
+      consigneeName:
 
-      consigneeAddress: buyerAddress,
+
+        customer?.defaultConsigneeName ??
+
+
+        customer?.legalName ??
+
+
+        "",
+
+
+      consigneeAddress:
+
+
+        customer?.defaultConsigneeAddress ??
+
+
+        buyerAddress,
+
     };
   }, [customer, product, profile]);
 
-  const defaultClauses = useMemo(() => {
-    const items = [
-      "Partial shipment and Transshipment: Allowed",
-      defaults.quantityTolerance
-        ? `Quantity Tolerance: ${defaults.quantityTolerance}`
-        : "Quantity Tolerance: +/-10%",
-      defaults.shipmentTerms
-        ? `Delivery Date: ${defaults.shipmentTerms}`
-        : "Delivery Date: Within the mutually agreed delivery period.",
-      defaults.requiredDocuments.length > 0
-        ? `Documents: ${defaults.requiredDocuments.join(", ")}`
-        : "Documents: Invoice, Packing List, Loading Pictures, Analysis Report, Bill of Lading, Certificate of Origin",
-    ];
+  const isPtAlumindoUsaSows =
+  customerId === "pt-alumindo-alloy-abadi" &&
+  productId === "usa-aluminum-sows";
 
-    return items.map((content, index) => makeClause(content, index));
-  }, [defaults]);
+const defaultClauses = useMemo(() => {
+  const items = isPtAlumindoUsaSows
+    ? [
+        "Partial shipment and Transshipment: Allowed",
+        "Quantity Tolerance: +-10%",
+        "Shipment Time: Within 30 days after signing the contract.",
+        "Documents: Invoice, Packing List, Loading Pictures, Bill of Lading",
+        "Packing: Loose",
+        "Payment Term:100% payment by T/T against documents 7 working days before shipment arrival. After receiving the full payment, the seller should do telex release.",
+        "Quality: As per mentioned above agreed standard specificaiton, ALSO FREE FROM TOXIC CHEMICALS, RADIOACTIVE MATERIALS, AND EXPLOSIVES, ORGANIC MATTERS ORIGINATED FROM ANIMALS OR PLANTS WITH DANGER OF EPIDEMIC DISEASES OR MEDICAL WASTE.",
+        "Weight Shortage consideration only on receipt of weight bridge slip. Both weigh shortage claim and quality claim should be filed within 14 days after the cargo arrival at the buyer's factory.",
+      ]
+    : [
+        "Partial shipment and Transshipment: Allowed",
+        defaults.quantityTolerance
+          ? `Quantity Tolerance: ${defaults.quantityTolerance}`
+          : "Quantity Tolerance: +/-10%",
+        defaults.shipmentTerms
+          ? `Delivery Date: ${defaults.shipmentTerms}`
+          : "Delivery Date: Within the mutually agreed delivery period.",
+        defaults.requiredDocuments.length > 0
+          ? `Documents: ${defaults.requiredDocuments.join(", ")}`
+          : "Documents: Invoice, Packing List, Loading Pictures, Analysis Report, Bill of Lading, Certificate of Origin",
+      ];
+
+  return items.map((content, index) => makeClause(content, index));
+}, [defaults, isPtAlumindoUsaSows]);
 
   const [contractDate, setContractDate] = useState(getToday());
 
@@ -217,11 +264,27 @@ function NewTradeContractPageContent() {
 
   const [hsCode, setHsCode] = useState(defaults.hsCode);
 
-  const [quantity, setQuantity] = useState("250");
+  const [quantity, setQuantity] = useState(
+    customerId === "ningbo-changzhen" && productId === "zinc-ingot"
+      ? "21"
+      : isDeltaOffGrade || isShenzhenGechuang
+        ? "50"
+        : "250",
+  );
 
   const [unit, setUnit] = useState<QuantityUnit>(defaults.unit as QuantityUnit);
 
-  const [unitPrice, setUnitPrice] = useState("");
+  const [unitPrice, setUnitPrice] = useState(
+    customerId === "ningbo-changzhen" && productId === "zinc-ingot"
+      ? "2150"
+      : "",
+  );
+
+  const [purchaseUnitPrice, setPurchaseUnitPrice] =
+    useState("");
+
+  const [commissionPerMt, setCommissionPerMt] =
+    useState("0");
 
   const [currency, setCurrency] = useState<Currency>(
     defaults.currency as Currency,
@@ -233,13 +296,19 @@ function NewTradeContractPageContent() {
 
   const [depositRate, setDepositRate] = useState(String(defaults.depositRate));
 
+  const [paymentTerms, setPaymentTerms] = useState(
+    defaults.paymentTerms,
+  );
+
   const [loadingPort, setLoadingPort] = useState(defaults.loadingPort);
 
   const [destinationPort, setDestinationPort] = useState(
     defaults.destinationPort,
   );
 
-  const [consigneeSameAsBuyer, setConsigneeSameAsBuyer] = useState(true);
+  const [consigneeSameAsBuyer, setConsigneeSameAsBuyer] = useState(
+    !customer?.defaultConsigneeName,
+  );
 
   const [consigneeName, setConsigneeName] = useState(defaults.consigneeName);
 
@@ -250,7 +319,14 @@ function NewTradeContractPageContent() {
   const supplierOptions = getSupplierOptions();
 
   const [supplierPartnerId, setSupplierPartnerId] =
-    useState("gravita-netherlands");
+    useState(
+      customerId === "pt-alumindo-alloy-abadi" &&
+      productId === "usa-aluminum-sows"
+        ? "metal-exchange"
+        : isDeltaOffGrade || isShenzhenGechuang
+          ? "tangent-trading"
+          : "gravita-netherlands",
+    );
 
   const selectedSupplier =
     getBusinessPartnerById(supplierPartnerId);
@@ -258,17 +334,57 @@ function NewTradeContractPageContent() {
   const factoryOptions =
     getFactoryOptions(supplierPartnerId);
 
+  const isPtAlumindoUsaAluminum =
+    customerId === "pt-alumindo-alloy-abadi" &&
+    productId === "usa-aluminum-sows";
+
+  const [newFactoryName, setNewFactoryName] =
+    useState("");
+
+  const [savedFactories, setSavedFactories] =
+    useState<ReturnType<typeof getSavedFactories>>([]);
+
+  useEffect(() => {
+    setSavedFactories(getSavedFactories());
+  }, []);
+
   const [plannedFactoryPartnerId, setPlannedFactoryPartnerId] =
-    useState("gravita-factory-mozambique");
+    useState(
+      isDeltaOffGrade ||
+      isShenzhenGechuang ||
+      isPtAlumindoUsaAluminum
+        ? ""
+        : "gravita-factory-mozambique",
+    );
 
   const selectedFactory =
     getBusinessPartnerById(plannedFactoryPartnerId);
 
+  const selectedSavedFactory = savedFactories.find(
+    (factory) => factory.id === plannedFactoryPartnerId,
+  );
+
   const [plannedOriginCountry, setPlannedOriginCountry] =
-    useState("Mozambique");
+    useState(
+      isDeltaOffGrade
+        ? ""
+        : isShenzhenGechuang
+          ? "Indonesia"
+          : isPtAlumindoUsaAluminum
+            ? "USA"
+            : "Mozambique",
+    );
 
   const [plannedLoadingPort, setPlannedLoadingPort] =
-    useState("Maputo, Mozambique");
+    useState(
+      isDeltaOffGrade
+        ? ""
+        : isShenzhenGechuang
+          ? "Any Port, Indonesia"
+          : isPtAlumindoUsaAluminum
+            ? "Any Port, USA"
+            : "Maputo, Mozambique",
+    );
 
   const [actualShipperLegalName, setActualShipperLegalName] =
     useState("");
@@ -289,10 +405,98 @@ function NewTradeContractPageContent() {
   const [clauses, setClauses] = useState<EditableClause[]>(defaultClauses);
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
+  useEffect(() => {
+    if (!editId) {
+      return;
+    }
+
+    const saved = getSavedContractDraft(editId);
+
+    if (!saved) {
+      console.error("Saved contract not found:", editId);
+      return;
+    }
+
+    setContractNumber(saved.contractNumber);
+    setContractDate(saved.contractDate);
+
+    setMaterial(saved.material);
+    setHsCode(saved.hsCode);
+    setQuantity(String(saved.quantity));
+    setUnit(saved.unit);
+    setUnitPrice(String(saved.unitPrice));
+    setPurchaseUnitPrice(String(saved.purchaseUnitPrice ?? ""));
+    setCommissionPerMt(String(saved.commissionPerMt ?? "0"));
+
+    setCurrency(saved.currency);
+    setIncoterm(saved.incoterm);
+
+    setDepositRate(String(saved.depositRate));
+    setPaymentTerms(saved.paymentTerms ?? "");
+
+    setLoadingPort(saved.loadingPort);
+    setDestinationPort(saved.destinationPort);
+
+    setConsigneeSameAsBuyer(
+      saved.consigneeSameAsBuyer ?? true,
+    );
+    setConsigneeName(saved.consigneeName ?? "");
+    setConsigneeAddress(saved.consigneeAddress ?? "");
+
+    setSupplierPartnerId(
+      saved.supplierPartnerId ?? "",
+    );
+
+    setPlannedFactoryPartnerId(
+      saved.plannedFactoryPartnerId ?? "",
+    );
+
+    setPlannedOriginCountry(
+      saved.plannedOriginCountry ?? "",
+    );
+
+    setPlannedLoadingPort(
+      saved.plannedLoadingPort ?? "",
+    );
+
+    setActualShipperLegalName(
+      saved.actualShipperLegalName ?? "",
+    );
+
+    setShipmentSourceStatus(
+      saved.shipmentSourceStatus ?? "planned",
+    );
+
+    setDescriptionOfGoods(
+      saved.descriptionOfGoods ?? "",
+    );
+
+    setSpecificationImage(
+      saved.specificationImage ?? "",
+    );
+
+    setClauses(
+      (saved.clauses ?? []).map((clause) => ({
+        id: clause.id,
+        content: clause.content,
+      })),
+    );
+  }, [editId]);
+
 
   const quantityValue = Number.parseFloat(quantity) || 0;
 
   const unitPriceValue = Number.parseFloat(unitPrice) || 0;
+
+  const purchaseUnitPriceValue =
+    Number.parseFloat(purchaseUnitPrice) || 0;
+
+  const commissionPerMtValue =
+    Math.max(
+      Number.parseFloat(commissionPerMt) || 0,
+      0,
+    );
 
   const depositRateValue = Math.max(
     0,
@@ -399,7 +603,10 @@ function NewTradeContractPageContent() {
       );
     }
 
+    // New contracts must use a new business number.
+    // Edit mode keeps the existing contract number.
     if (
+      !editId &&
       isBusinessNumberInUse(
         contractNumber,
       )
@@ -419,59 +626,82 @@ function NewTradeContractPageContent() {
     }
 
     if (!company || !customer || !product) {
-      errors.push("Company, customer or product information is missing.");
+      errors.push(
+        "Company, customer or product information is missing.",
+      );
     }
 
     if (!contractDate.trim()) {
-      errors.push("Contract Date is required.");
+      errors.push(
+        "Contract Date is required.",
+      );
     }
 
     if (!material.trim()) {
-      errors.push("Material is required.");
+      errors.push(
+        "Material is required.",
+      );
     }
 
     if (quantityValue <= 0) {
-      errors.push("Quantity must be greater than zero.");
+      errors.push(
+        "Quantity must be greater than zero.",
+      );
     }
 
     if (unitPriceValue <= 0) {
-      errors.push("Unit Price must be greater than zero.");
+      errors.push(
+        "Unit Price must be greater than zero.",
+      );
     }
 
-    const rawDepositRate = Number.parseFloat(depositRate);
+    const rawDepositRate =
+      Number.parseFloat(depositRate);
 
     if (
       !Number.isFinite(rawDepositRate) ||
       rawDepositRate < 0 ||
       rawDepositRate > 100
     ) {
-      errors.push("Deposit Rate must be between 0% and 100%.");
-    }
-
-    if (!loadingPort.trim()) {
-      errors.push("Port of Loading and Country is required.");
+      errors.push(
+        "Deposit Rate must be between 0% and 100%.",
+      );
     }
 
     if (!destinationPort.trim()) {
-      errors.push("Destination Port is required.");
+      errors.push(
+        "Destination Port is required.",
+      );
     }
 
     if (!consigneeName.trim()) {
-      errors.push("Consignee Name is required.");
+      errors.push(
+        "Consignee Name is required.",
+      );
     }
 
     if (!consigneeAddress.trim()) {
-      errors.push("Consignee Address is required.");
+      errors.push(
+        "Consignee Address is required.",
+      );
     }
 
     if (!descriptionOfGoods.trim()) {
-      errors.push("Description of Goods is required.");
+      errors.push(
+        "Description of Goods is required.",
+      );
     }
 
-    const completedClauses = clauses.filter((clause) => clause.content.trim());
+    const completedClauses =
+      clauses.filter(
+        (clause) =>
+          clause.content.trim(),
+      );
 
     if (completedClauses.length === 0) {
-      errors.push("At least one contract clause is required.");
+      errors.push(
+        "At least one contract clause is required.",
+      );
     }
 
     setValidationErrors(errors);
@@ -481,7 +711,6 @@ function NewTradeContractPageContent() {
         top: 0,
         behavior: "smooth",
       });
-
       return;
     }
 
@@ -489,51 +718,90 @@ function NewTradeContractPageContent() {
       return;
     }
 
-    const now = new Date().toISOString();
+    const now =
+      new Date().toISOString();
+
+    const existingDraft =
+      editId
+        ? getSavedContractDraft(editId)
+        : undefined;
 
     const draft: SavedContractDraft = {
-      id: `contract-${contractNumber}`,
+      id:
+        existingDraft?.id ??
+        `contract-${contractNumber}`,
 
       contractNumber,
+
       contractDate,
 
       businessType,
+
       companyId,
-      companyName: company.legalName,
+
+      companyName:
+        company.legalName,
 
       customerId,
-      customerName: customer.legalName,
 
-      buyerAddress: defaults.buyerAddress,
+      customerName:
+        customer.legalName,
+
+      buyerAddress:
+        defaults.buyerAddress,
 
       consigneeSameAsBuyer,
+
       consigneeName,
+
       consigneeAddress,
 
       supplierPartnerId,
+
       supplierLegalName:
-        selectedSupplier?.legalName || "",
+        selectedSupplier?.legalName ||
+        "",
+
       supplierShortName:
-        selectedSupplier?.shortName || "",
+        selectedSupplier?.shortName ||
+        "",
 
       plannedFactoryPartnerId,
+
       plannedFactoryName:
-        selectedFactory?.shortName || "",
+        selectedFactory?.shortName ||
+        selectedSavedFactory?.name ||
+        "",
+
       plannedOriginCountry,
+
       plannedLoadingPort,
 
       actualShipperLegalName:
         actualShipperLegalName.trim(),
+
       shipmentSourceStatus,
 
       productId,
+
       material,
+
       hsCode,
 
-      quantity: quantityValue,
+      quantity:
+        quantityValue,
+
       unit,
 
-      unitPrice: unitPriceValue,
+      unitPrice:
+        unitPriceValue,
+
+      purchaseUnitPrice:
+        purchaseUnitPriceValue,
+
+      commissionPerMt:
+        commissionPerMtValue,
+
       currency,
 
       totalAmount,
@@ -541,43 +809,65 @@ function NewTradeContractPageContent() {
       incoterm,
 
       loadingPort,
+
       destinationPort,
 
-      depositRate: depositRateValue,
+      depositRate:
+        depositRateValue,
+
+      paymentTerms:
+        paymentTerms.trim(),
 
       depositAmount,
+
       balanceAmount,
 
       descriptionOfGoods,
 
       specificationImage,
 
-      clauses: clauses
-        .filter((clause) => clause.content.trim())
-        .map((clause) => ({
-          id: clause.id,
-          content: clause.content.trim(),
-        })),
+      clauses:
+        completedClauses.map(
+          (clause) => ({
+            id: clause.id,
+            content:
+              clause.content.trim(),
+          }),
+        ),
 
-      proformaInvoiceNumber: piNumber,
+      proformaInvoiceNumber:
+        piNumber,
 
-      commercialInvoiceNumbers: ciNumbers,
+      commercialInvoiceNumbers:
+        ciNumbers,
 
-      status: "draft",
+      status:
+        existingDraft?.status ??
+        "draft",
 
-      createdAt: now,
-      updatedAt: now,
+      createdAt:
+        existingDraft?.createdAt ??
+        now,
+
+      updatedAt:
+        now,
     };
 
     saveContractDraft(draft);
 
-    commitIssuedBusinessNumber(
-      businessType,
-      contractNumber,
-    );
+    // Only NEW contracts consume a business number.
+    if (!editId) {
+      commitIssuedBusinessNumber(
+        businessType,
+        contractNumber,
+      );
+    }
 
-    router.push("/admin/trade/contracts");
+    router.push(
+      "/admin/trade/contracts",
+    );
   }
+
   if (!company || !customer || !product) {
     return (
       <main className="min-h-screen bg-[#f5f6f8] px-6 py-20">
@@ -742,29 +1032,100 @@ function NewTradeContractPageContent() {
                 }
               />
 
-              <SelectField
-                label="Planned Factory"
-                value={plannedFactoryPartnerId}
-                onChange={(value) => {
-                  setPlannedFactoryPartnerId(value);
+              <div className="space-y-3">
+                <SelectField
+                  label="Planned Factory"
+                  value={plannedFactoryPartnerId}
+                  onChange={(value) => {
+                    setPlannedFactoryPartnerId(value);
 
-                  const factory =
-                    getBusinessPartnerById(value);
+                    const factory =
+                      getBusinessPartnerById(value);
 
-                  if (factory) {
-                    setPlannedOriginCountry(
-                      factory.country,
-                    );
-                    setPlannedLoadingPort(
-                      factory.defaultLoadingPort ?? "",
-                    );
-                  }
-                }}
-                options={factoryOptions.map((partner) => [
-                  partner.id,
-                  `${partner.shortName} — ${partner.country}`,
-                ])}
-              />
+                    const savedFactory =
+                      savedFactories.find(
+                        (item) => item.id === value,
+                      );
+
+                    if (factory) {
+                      setPlannedOriginCountry(
+                        factory.country,
+                      );
+                      setPlannedLoadingPort(
+                        factory.defaultLoadingPort ?? "",
+                      );
+                    } else if (savedFactory) {
+                      setPlannedOriginCountry("");
+                      setPlannedLoadingPort("");
+                    }
+                  }}
+                  options={[
+                    ...factoryOptions.map((partner) => [
+                      partner.id,
+                      `${partner.shortName} — ${partner.country}`,
+                    ] as [string, string]),
+                    ...savedFactories
+                      .filter((factory) => factory.active)
+                      .map((factory) => [
+                        factory.id,
+                        `${factory.name} — Saved Factory`,
+                      ] as [string, string]),
+                  ]}
+                />
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newFactoryName}
+                    onChange={(event) =>
+                      setNewFactoryName(event.target.value)
+                    }
+                    placeholder="Enter a new factory name"
+                    className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none transition focus:border-black"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const savedFactory =
+                        saveFactoryName(newFactoryName);
+
+                      if (!savedFactory) {
+                        return;
+                      }
+
+                      setSavedFactories((current) => {
+                        const exists = current.some(
+                          (factory) =>
+                            factory.id === savedFactory.id,
+                        );
+
+                        if (exists) {
+                          return current;
+                        }
+
+                        return [...current, savedFactory];
+                      });
+
+                      setPlannedFactoryPartnerId(
+                        savedFactory.id,
+                      );
+                      setPlannedOriginCountry("");
+                      setPlannedLoadingPort("");
+                      setNewFactoryName("");
+                    }}
+                    disabled={!newFactoryName.trim()}
+                    className="shrink-0 rounded-xl border border-black/15 px-4 py-3 text-sm font-semibold transition hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Save Factory
+                  </button>
+                </div>
+
+                <p className="text-xs text-black/45">
+                  Enter a factory name and click Save Factory.
+                  The name will be available in future contracts.
+                </p>
+              </div>
 
               <SelectField
                 label="Shipment Source Status"
@@ -836,10 +1197,28 @@ function NewTradeContractPageContent() {
               />
 
               <Field
-                label="Unit Price"
+                label="Sales Unit Price"
                 type="number"
                 value={unitPrice}
                 onChange={setUnitPrice}
+                min="0"
+                step="0.01"
+              />
+
+              <Field
+                label="Purchase Unit Price"
+                type="number"
+                value={purchaseUnitPrice}
+                onChange={setPurchaseUnitPrice}
+                min="0"
+                step="0.01"
+              />
+
+              <Field
+                label="Commission per MT"
+                type="number"
+                value={commissionPerMt}
+                onChange={setCommissionPerMt}
                 min="0"
                 step="0.01"
               />
@@ -872,6 +1251,13 @@ function NewTradeContractPageContent() {
                 min="0"
                 max="100"
                 step="0.01"
+              />
+
+              <TextAreaField
+                label="Payment Terms"
+                value={paymentTerms}
+                onChange={setPaymentTerms}
+                rows={3}
               />
 
               <Field
@@ -1075,7 +1461,9 @@ function NewTradeContractPageContent() {
             onClick={handleSaveDraft}
             className="w-full rounded-xl bg-black px-5 py-4 text-sm font-semibold !text-white shadow-md transition hover:bg-neutral-800 hover:shadow-lg"
           >
-            Save Contract Draft
+            {editId
+              ? "Update Contract"
+              : "Save Contract Draft"}
           </button>
           <p className="px-2 text-xs leading-5 text-black/45">
             Business numbers are advanced only after a record is saved

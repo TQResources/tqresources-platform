@@ -1,5 +1,7 @@
 "use client";
 
+import SavedContractsButton from "../../../../../../components/trade/SavedContractsButton";
+
 import Link from "next/link";
 import {
   useEffect,
@@ -353,18 +355,22 @@ export default function ShipmentListPage() {
             </p>
           </div>
 
-          {nextShipmentAvailable ? (
-            <Link
-              href={`/admin/trade/contracts/${contract.id}/shipments/new`}
-              className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3.5 text-sm font-semibold !text-white shadow-md transition hover:bg-neutral-800"
-            >
-              + Create Shipment
-            </Link>
-          ) : (
-            <div className="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm text-black/50">
-              Maximum 4 shipments
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {nextShipmentAvailable ? (
+              <Link
+                href={`/admin/trade/contracts/${contract.id}/shipments/new`}
+                className="inline-flex items-center justify-center rounded-xl bg-black px-5 py-3.5 text-sm font-semibold !text-white shadow-md transition hover:bg-neutral-800"
+              >
+                + Create Shipment
+              </Link>
+            ) : (
+              <div className="rounded-xl border border-black/10 bg-white px-5 py-3 text-sm text-black/50">
+                Maximum 4 shipments
+              </div>
+            )}
+
+            <SavedContractsButton />
+          </div>
         </div>
 
         {/* Contract progress */}

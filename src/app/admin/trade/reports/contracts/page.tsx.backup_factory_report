@@ -1,0 +1,482 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  getSavedContractDrafts,
+  type SavedContractDraft,
+} from "../../../../../data/trade/storage";
+
+import {
+  getCustomerById,
+} from "../../../../../data/trade/customers";
+
+import {
+  getContractShipmentStatus,
+  getSavedShipments,
+  type ShipmentRecord,
+} from "../../../../../data/trade/shipments";
+
+type CompanyFilter = "japan" | "hong-kong";
+
+function formatNumber(value: number, digits = 3) {
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+  });
+}
+
+function formatMoney(value: number) {
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function getRowClass(contract: SavedContractDraft) {
+  if (contract.status === "cancelled") {
+    return "border-b border-black/10 bg-black/30 text-black/65 last:border-b-0";
+  }
+
+  if (
+    getContractShipmentStatus(contract.id) ===
+    "completed"
+  ) {
+    return "border-b border-black/5 bg-black/[0.06] text-black/70 last:border-b-0";
+  }
+
+  return "border-b border-black/5 bg-white last:border-b-0";
+}
+
+function getShipperName(
+  contract: SavedContractDraft,
+  shipments: ShipmentRecord[],
+) {
+  const shipmentShippers = Array.from(
+    new Set(
+      shipments
+        .filter(
+          (shipment) =>
+            shipment.contractId === contract.id,
+        )
+        .map((shipment) =>
+          shipment.actualShipperLegalName?.trim(),
+        )
+        .filter(
+          (name): name is string => Boolean(name),
+        ),
+    ),
+  );
+
+  if (shipmentShippers.length > 0) {
+    return shipmentShippers.join(" / ");
+  }
+
+  return (
+    contract.actualShipperLegalName?.trim() ||
+    contract.supplierShortName?.trim() ||
+    contract.supplierLegalName?.trim() ||
+    "To be confirmed"
+  );
+}
+
+function getBuyerName(
+  contract: SavedContractDraft,
+) {
+  return (
+    getCustomerById(
+      contract.customerId,
+    )?.shortName?.trim() ||
+    contract.customerName
+  );
+}
+
+function getSupplierName(
+  contract: SavedContractDraft,
+) {
+  return (
+    contract.supplierShortName?.trim() ||
+    contract.supplierLegalName?.trim() ||
+    "To be confirmed"
+  );
+}
+
+export default function MonthlyContractSummaryPage() {
+  const [contracts, setContracts] = useState<
+    SavedContractDraft[]
+  >([]);
+  const [shipments, setShipments] = useState<
+    ShipmentRecord[]
+  >([]);
+  const [loaded, setLoaded] = useState(false);
+  const [company, setCompany] =
+    useState<CompanyFilter>("japan");
+  const [month, setMonth] = useState("all");
+
+  useEffect(() => {
+    setContracts(getSavedContractDrafts());
+    setShipments(getSavedShipments());
+    setLoaded(true);
+  }, []);
+
+  const companyContracts = useMemo(
+    () =>
+      contracts
+        .filter(
+          (contract) =>
+            contract.companyId === company,
+        )
+        .sort((a, b) =>
+          b.contractDate.localeCompare(
+            a.contractDate,
+          ),
+        ),
+    [contracts, company],
+  );
+
+  const months = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          companyContracts
+            .map((contract) =>
+              contract.contractDate.slice(0, 7),
+            )
+            .filter(Boolean),
+        ),
+      ).sort((a, b) => b.localeCompare(a)),
+    [companyContracts],
+  );
+
+  const rows = useMemo(
+    () =>
+      companyContracts.filter(
+        (contract) =>
+          month === "all" ||
+          contract.contractDate.startsWith(month),
+      ),
+    [companyContracts, month],
+  );
+
+  const totals = useMemo(
+    () =>
+      rows.reduce(
+        (total, contract) => {
+          const quantity =
+            Number(contract.quantity) || 0;
+          const salesPrice =
+            Number(contract.unitPrice) || 0;
+          const purchasePrice =
+            Number(contract.purchaseUnitPrice) || 0;
+          const commissionPerMt =
+            Number(contract.commissionPerMt) || 0;
+
+          return {
+            quantity:
+              total.quantity + quantity,
+            salesAmount:
+              total.salesAmount +
+              Number(contract.totalAmount || 0),
+            plannedGrossProfit:
+              total.plannedGrossProfit +
+              (salesPrice -
+                purchasePrice -
+                commissionPerMt) *
+                quantity,
+          };
+        },
+        {
+          quantity: 0,
+          salesAmount: 0,
+          plannedGrossProfit: 0,
+        },
+      ),
+    [rows],
+  );
+
+  useEffect(() => {
+    setMonth("all");
+  }, [company]);
+
+  const currency = rows[0]?.currency || "USD";
+
+  if (!loaded) {
+    return (
+      <main className="min-h-screen bg-[#f5f6f8] px-6 py-20">
+        <div className="mx-auto max-w-7xl">
+          Loading contract report...
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#f5f6f8] px-5 py-10 md:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div>
+            <Link
+              href="/admin/trade/contracts"
+              className="text-sm font-medium text-black/55 hover:text-black"
+            >
+              ← Back to Contracts
+            </Link>
+
+            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-black/45">
+              Trade Reports
+            </p>
+
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              Monthly Contract Summary
+            </h1>
+
+            <p className="mt-2 text-sm text-black/55">
+              Contract quantity, buyer, supplier,
+              shipper, purchase price and agreed
+              commission.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <div className="inline-flex rounded-xl border border-black/10 bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setCompany("japan")}
+                className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${
+                  company === "japan"
+                    ? "bg-black text-white"
+                    : "text-black/50"
+                }`}
+              >
+                Japan
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCompany("hong-kong")
+                }
+                className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${
+                  company === "hong-kong"
+                    ? "bg-black text-white"
+                    : "text-black/50"
+                }`}
+              >
+                Hong Kong
+              </button>
+            </div>
+
+            <select
+              value={month}
+              onChange={(event) =>
+                setMonth(event.target.value)
+              }
+              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold shadow-sm outline-none"
+            >
+              <option value="all">All Months</option>
+              {months.map((value) => (
+                <option
+                  key={value}
+                  value={value}
+                >
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard
+            label="Contracts"
+            value={String(rows.length)}
+          />
+          <SummaryCard
+            label="Contract Quantity"
+            value={`${formatNumber(
+              totals.quantity,
+            )} MT`}
+          />
+          <SummaryCard
+            label="Contract Sales Amount"
+            value={`${currency} ${formatMoney(
+              totals.salesAmount,
+            )}`}
+          />
+          <SummaryCard
+            label="Planned Gross Profit"
+            value={`${currency} ${formatMoney(
+              totals.plannedGrossProfit,
+            )}`}
+          />
+        </section>
+
+        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-black/50">
+          <span>White: In progress</span>
+          <span>Light gray: Completed</span>
+          <span>Dark gray: Cancelled</span>
+        </div>
+
+        <section className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
+          {rows.length === 0 ? (
+            <div className="px-8 py-16 text-center">
+              <h2 className="text-xl font-semibold">
+                No contracts
+              </h2>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-[1600px] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-black/10 bg-black/[0.025] text-xs uppercase tracking-wide text-black/45">
+                    <th className="px-4 py-4">Date</th>
+                    <th className="px-4 py-4">Contract</th>
+                    <th className="px-4 py-4">Buyer</th>
+                    <th className="px-4 py-4">Supplier</th>
+                    <th className="px-4 py-4">Shipper</th>
+                    <th className="px-4 py-4">Material</th>
+                    <th className="px-4 py-4 text-right">Quantity</th>
+                    <th className="px-4 py-4 text-right">Sales Price</th>
+                    <th className="px-4 py-4 text-right">Purchase Price</th>
+                    <th className="px-4 py-4 text-right">Commission/MT</th>
+                    <th className="px-4 py-4 text-right">Planned Margin/MT</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {rows.map((contract) => {
+                    const plannedMargin =
+                      Number(contract.unitPrice || 0) -
+                      Number(
+                        contract.purchaseUnitPrice || 0,
+                      ) -
+                      Number(
+                        contract.commissionPerMt || 0,
+                      );
+
+                    return (
+                      <tr
+                        key={contract.id}
+                        className={getRowClass(
+                          contract,
+                        )}
+                      >
+                        <td className="whitespace-nowrap px-4 py-4">
+                          {contract.contractDate}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <Link
+                            href={`/admin/trade/contracts/${contract.id}`}
+                            className="font-semibold hover:underline"
+                          >
+                            {contract.contractNumber}
+                          </Link>
+                        </td>
+
+                        <td className="max-w-[220px] px-4 py-4 font-medium">
+                          {getBuyerName(contract)}
+                        </td>
+
+                        <td className="max-w-[220px] px-4 py-4">
+                          {getSupplierName(contract)}
+                        </td>
+
+                        <td className="max-w-[240px] px-4 py-4">
+                          {getShipperName(
+                            contract,
+                            shipments,
+                          )}
+                        </td>
+
+                        <td className="max-w-[220px] px-4 py-4">
+                          {contract.material}
+                        </td>
+
+                        <td className="whitespace-nowrap px-4 py-4 text-right">
+                          {formatNumber(
+                            Number(contract.quantity),
+                          )}{" "}
+                          {contract.unit}
+                        </td>
+
+                        <MoneyCell
+                          currency={contract.currency}
+                          value={Number(
+                            contract.unitPrice,
+                          )}
+                        />
+
+                        <MoneyCell
+                          currency={contract.currency}
+                          value={Number(
+                            contract.purchaseUnitPrice ||
+                              0,
+                          )}
+                        />
+
+                        <MoneyCell
+                          currency={contract.currency}
+                          value={Number(
+                            contract.commissionPerMt ||
+                              0,
+                          )}
+                        />
+
+                        <MoneyCell
+                          currency={contract.currency}
+                          value={plannedMargin}
+                          strong
+                        />
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function SummaryCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+      <p className="text-xs font-semibold uppercase tracking-wide text-black/40">
+        {label}
+      </p>
+      <p className="mt-2 text-xl font-semibold">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function MoneyCell({
+  currency,
+  value,
+  strong = false,
+}: {
+  currency: string;
+  value: number;
+  strong?: boolean;
+}) {
+  return (
+    <td
+      className={`whitespace-nowrap px-4 py-4 text-right ${
+        strong ? "font-semibold" : ""
+      }`}
+    >
+      {currency} {formatMoney(value)}
+    </td>
+  );
+}

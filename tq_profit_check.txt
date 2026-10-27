@@ -1,0 +1,1615 @@
+===== 1. CONTRACT TYPE =====
+1-export type SavedContractStatus =
+2-  | "draft"
+3-  | "confirmed"
+4-  | "completed"
+5-  | "cancelled";
+6-
+7-export interface SavedContractClause {
+8-  id: string;
+9-  content: string;
+10-}
+11-
+12:export interface SavedContractDraft {
+13-  id: string;
+14-
+15-  contractNumber: string;
+16-  contractDate: string;
+17-
+18-  businessType:
+19-  | "japan-contract"
+20-  | "japan-domestic"
+21-  | "hong-kong-contract"
+22-  | "agency";
+23-
+24-  companyId: "japan" | "hong-kong";
+25-  companyName: string;
+26-
+27-  customerId: string;
+28-  customerName: string;
+29-  buyerAddress: string;
+30-
+31-  consigneeSameAsBuyer: boolean;
+32-  consigneeName: string;
+33-  consigneeAddress: string;
+34-
+35-  supplierPartnerId?: string;
+36-  supplierLegalName?: string;
+37-  supplierShortName?: string;
+38-
+39-  plannedFactoryPartnerId?: string;
+40-  plannedFactoryName?: string;
+41-  plannedOriginCountry?: string;
+42-  plannedLoadingPort?: string;
+43-
+44-  actualShipperLegalName?: string;
+45-
+46-  shipmentSourceStatus?:
+47-    | "planned"
+48-    | "supplier-confirmed"
+49-    | "bl-confirmed";
+50-
+51-  productId: string;
+52-  material: string;
+53-  hsCode: string;
+54-
+55-  quantity: number;
+56-  unit: "MT" | "KG" | "PCS";
+57-
+
+===== 2. CONTRACT EDIT SAVE =====
+472-
+473-    setClauses(
+474-      (saved.clauses ?? []).map((clause) => ({
+475-        id: clause.id,
+476-        content: clause.content,
+477-      })),
+478-    );
+479-  }, [editId]);
+480-
+481-
+482-  const quantityValue = Number.parseFloat(quantity) || 0;
+483-
+484-  const unitPriceValue = Number.parseFloat(unitPrice) || 0;
+485-
+486-  const purchaseUnitPriceValue =
+487-    Number.parseFloat(purchaseUnitPrice) || 0;
+488-
+489-  const commissionPerMtValue =
+490-    Math.max(
+491-      Number.parseFloat(commissionPerMt) || 0,
+492-      0,
+493-    );
+494-
+495-  const depositRateValue = Math.max(
+496-    0,
+497-    Math.min(100, Number.parseFloat(depositRate) || 0),
+498-  );
+499-
+500-  const totalAmount = quantityValue * unitPriceValue;
+501-
+502:  const depositAmount = calculateDepositAmount(totalAmount, depositRateValue);
+503-
+504:  const balanceAmount = totalAmount - depositAmount;
+505-
+506-  const piNumber = generateProformaInvoiceNumber(contractNumber);
+507-
+508-  const ciNumbers = [1, 2, 3, 4].map((sequence) =>
+509-    generateCommercialInvoiceNumber(contractNumber, sequence as 1 | 2 | 3 | 4),
+510-  );
+511-
+512-  function updateClause(id: string, content: string) {
+513-    setClauses((current) =>
+514-      current.map((clause) =>
+515-        clause.id === id
+516-          ? {
+517-              ...clause,
+518-              content,
+519-            }
+520-          : clause,
+521-      ),
+522-    );
+523-  }
+524-
+525-  function addClause() {
+526-    setClauses((current) => [...current, makeClause("", current.length)]);
+527-  }
+528-
+529-  function deleteClause(id: string) {
+530-    setClauses((current) => current.filter((clause) => clause.id !== id));
+531-  }
+532-
+533-  function moveClause(index: number, direction: "up" | "down") {
+534-    setClauses((current) => {
+535-      const next = [...current];
+536-
+537-      const target = direction === "up" ? index - 1 : index + 1;
+538-
+539-      if (target < 0 || target >= next.length) {
+540-        return current;
+541-      }
+542-
+543-      [next[index], next[target]] = [next[target], next[index]];
+544-
+545-      return next;
+546-    });
+547-  }
+548-  function readSpecificationImage(file: File) {
+549-    if (!file.type.startsWith("image/")) {
+550-      setValidationErrors(["Specification must be an image file."]);
+551-      return;
+552-    }
+553-
+554-    const reader = new FileReader();
+555-
+556-    reader.onload = () => {
+557-      setSpecificationImage(String(reader.result ?? ""));
+558-    };
+559-
+560-    reader.readAsDataURL(file);
+561-  }
+562-
+563-  function handleSpecificationFileChange(
+564-    event: ChangeEvent<HTMLInputElement>,
+565-  ) {
+566-    const file = event.target.files?.[0];
+567-
+568-    if (file) {
+569-      readSpecificationImage(file);
+570-    }
+571-  }
+572-
+573-  function handleSpecificationPaste(
+574-    event: ClipboardEvent<HTMLDivElement>,
+--
+785-      quantity:
+786-        quantityValue,
+787-
+788-      unit,
+789-
+790-      unitPrice:
+791-        unitPriceValue,
+792-
+793-      purchaseUnitPrice:
+794-        purchaseUnitPriceValue,
+795-
+796-      commissionPerMt:
+797-        commissionPerMtValue,
+798-
+799-      currency,
+800-
+801-      totalAmount,
+802-
+803-      incoterm,
+804-
+805-      loadingPort,
+806-
+807-      destinationPort,
+808-
+809-      depositRate:
+810-        depositRateValue,
+811-
+812-      paymentTerms:
+813-        paymentTerms.trim(),
+814-
+815:      depositAmount,
+816-
+817-      balanceAmount,
+818-
+819-      descriptionOfGoods,
+820-
+821-      specificationImage,
+822-
+823-      clauses:
+824-        completedClauses.map(
+825-          (clause) => ({
+826-            id: clause.id,
+827-            content:
+828-              clause.content.trim(),
+829-          }),
+830-        ),
+831-
+832-      proformaInvoiceNumber:
+833-        piNumber,
+834-
+835-      commercialInvoiceNumbers:
+836-        ciNumbers,
+837-
+838-      status:
+839-        existingDraft?.status ??
+840-        "draft",
+841-
+842-      createdAt:
+843-        existingDraft?.createdAt ??
+844-        now,
+845-
+846-      updatedAt:
+847-        now,
+848-    };
+849-
+850-    saveContractDraft(draft);
+851-
+852-    // Only NEW contracts consume a business number.
+853-    if (!editId) {
+854-      commitIssuedBusinessNumber(
+855-        businessType,
+856-        contractNumber,
+857-      );
+858-    }
+859-
+860-    router.push(
+861-      "/admin/trade/contracts",
+862-    );
+863-  }
+864-
+865-  if (!company || !customer || !product) {
+866-    return (
+867-      <main className="min-h-screen bg-[#f5f6f8] px-6 py-20">
+868-        <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8">
+869-          <h1 className="text-2xl font-semibold">
+870-            Transaction information is missing
+871-          </h1>
+872-
+873-          <p className="mt-3 text-black/60">
+874-            Please return and select a valid company, customer and product.
+875-          </p>
+876-
+877-          <Link
+878-            href="/admin/trade"
+879-            className="mt-6 inline-block rounded-lg bg-black px-5 py-3 text-sm font-semibold text-white"
+880-          >
+881-            Back to Trade System
+882-          </Link>
+883-        </div>
+884-      </main>
+885-    );
+--
+1391-            </p>
+1392-
+1393-            <div className="mt-7 space-y-4 border-t border-white/15 pt-6">
+1394-              <SummaryRow label="Seller" value={company.shortName} />
+1395-
+1396-              <SummaryRow label="Buyer" value={customer.shortName} />
+1397-
+1398-              <SummaryRow
+1399-                label="Incoterm"
+1400-                value={`${incoterm} ${destinationPort}`}
+1401-              />
+1402-
+1403-              <SummaryRow
+1404-                label="Quantity"
+1405-                value={`${formatNumber(quantityValue, 3)} ${unit}`}
+1406-              />
+1407-
+1408-              <SummaryRow
+1409-                label="Unit Price"
+1410-                value={`${currency} ${formatNumber(unitPriceValue)}`}
+1411-              />
+1412-
+1413-              <SummaryRow
+1414-                label="Total Amount"
+1415-                value={`${currency} ${formatNumber(totalAmount)}`}
+1416-                strong
+1417-              />
+1418-
+1419-              <SummaryRow
+1420-                label={`Deposit (${formatNumber(depositRateValue)}%)`}
+1421:                value={`${currency} ${formatNumber(depositAmount)}`}
+1422-              />
+1423-
+1424-              <SummaryRow
+1425-                label="Balance"
+1426-                value={`${currency} ${formatNumber(balanceAmount)}`}
+1427-              />
+1428-            </div>
+1429-
+1430-            <div className="mt-7 border-t border-white/15 pt-6">
+1431-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
+1432-                Document Numbers
+1433-              </p>
+1434-
+1435-              <div className="mt-4 space-y-3">
+1436-                <DocumentNumber
+1437-                  label="PI"
+1438-                  number={piNumber}
+1439-                  muted={depositRateValue === 0}
+1440-                />
+1441-
+1442-                {ciNumbers.map((number, index) => (
+1443-                  <DocumentNumber
+1444-                    key={number}
+1445-                    label={`CI ${index + 1}`}
+1446-                    number={number}
+1447-                  />
+1448-                ))}
+1449-              </div>
+1450-            </div>
+1451-          </div>
+1452-
+1453-          <button
+1454-            type="button"
+1455-            onClick={handleSaveDraft}
+1456-            className="w-full rounded-xl bg-black px-5 py-4 text-sm font-semibold !text-white shadow-md transition hover:bg-neutral-800 hover:shadow-lg"
+1457-          >
+1458-            {editId
+1459-              ? "Update Contract"
+1460-              : "Save Contract Draft"}
+1461-          </button>
+1462-          <p className="px-2 text-xs leading-5 text-black/45">
+1463-            Business numbers are advanced only after a record is saved
+1464-            successfully. Japan domestic uses its own five-digit sequence.
+1465-          </p>
+1466-        </aside>
+1467-      </div>
+1468-    </main>
+1469-  );
+1470-}
+1471-
+1472-function Card({
+1473-  eyebrow,
+1474-  title,
+1475-  children,
+1476-}: {
+1477-  eyebrow: string;
+1478-  title: string;
+1479-  children: ReactNode;
+1480-}) {
+1481-  return (
+1482-    <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm">
+1483-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/40">
+1484-        {eyebrow}
+1485-      </p>
+1486-
+1487-      <h2 className="mt-2 text-xl font-semibold">{title}</h2>
+1488-
+1489-      <div className="mt-6">{children}</div>
+1490-    </div>
+1491-  );
+
+===== 3. SHIPMENT TYPE =====
+
+===== 4. CONTRACT PROFIT REPORT =====
+9-} from "../../../../../data/trade/storage";
+10-
+11-import {
+12-  calculateInvoiceAmount,
+13-  calculateTotalNetWeight,
+14-  getSavedShipments,
+15-  type ShipmentRecord,
+16-} from "../../../../../data/trade/shipments";
+17-
+18-type CompanyFilter = "japan" | "hong-kong";
+19-
+20-type ProfitRow = {
+21-  shipmentId: string;
+22-  contractId: string;
+23-  companyId: SavedContractDraft["companyId"];
+24-  contractNumber: string;
+25-  invoiceNumber: string;
+26-  invoiceDate: string;
+27-  month: string;
+28-  customerName: string;
+29-  material: string;
+30-  currency: string;
+31-  quantity: number;
+32-  salesAmount: number;
+33-  purchaseAmount: number;
+34-  claimAmount: number;
+35-  commissionAmount: number;
+36-  ciBankFee: number;
+37-  allocatedPiBankFee: number;
+38-  otherAdjustment: number;
+39:  netProfit: number;
+40-  profitPerMt: number;
+41-  profitMargin: number;
+42-};
+43-
+44-function formatNumber(value: number, digits = 3) {
+45-  return value.toLocaleString("en-US", {
+46-    minimumFractionDigits: 0,
+47-    maximumFractionDigits: digits,
+48-  });
+49-}
+50-
+51-function formatMoney(value: number) {
+52-  return value.toLocaleString("en-US", {
+53-    minimumFractionDigits: 2,
+54-    maximumFractionDigits: 2,
+55-  });
+56-}
+57-
+58:function buildProfitRow(
+59-  shipment: ShipmentRecord,
+60-  contract: SavedContractDraft,
+61-): ProfitRow {
+62-  const quantity = calculateTotalNetWeight(
+63-    shipment.containers,
+64-  );
+65-
+66-  const salesAmount = calculateInvoiceAmount(
+67-    shipment.containers,
+68-    contract.unitPrice,
+69-  );
+70-
+71-  const purchaseUnitPrice =
+72-    Number(shipment.purchaseUnitPrice) || 0;
+73-
+74-  const calculatedPurchase =
+75-    quantity * purchaseUnitPrice;
+76-
+77-  const purchaseOverride =
+78-    Number(shipment.purchaseAmountOverride) || 0;
+79-
+80-  const purchaseAmount =
+81-    purchaseOverride > 0
+82-      ? purchaseOverride
+83-      : calculatedPurchase;
+84-
+85-  const depositApplied =
+86-    Number(shipment.depositAppliedAmount) || 0;
+87-
+88-  const claimAmount =
+89-    Number(shipment.claimAmount) || 0;
+90-
+91-  const balanceDue = Math.max(
+92-    salesAmount - depositApplied - claimAmount,
+93-    0,
+94-  );
+95-
+96-  const actualReceived =
+97-    Number(shipment.actualAmountReceived) || 0;
+98-
+99-  const ciBankFee =
+100-    actualReceived > 0
+101-      ? Math.max(balanceDue - actualReceived, 0)
+102-      : 0;
+103-
+104-  const contractDeposit =
+105-    Number(contract.depositAmount) || 0;
+106-
+107-  const actualDepositReceived =
+108-    Number(contract.actualDepositReceived) || 0;
+109-
+110-  const totalPiBankFee =
+111-    contractDeposit > 0 &&
+112-    actualDepositReceived > 0
+113-      ? Math.max(
+114-          contractDeposit -
+115-            actualDepositReceived,
+116-          0,
+117-        )
+118-      : 0;
+119-
+120-  const allocatedPiBankFee =
+121-    contractDeposit > 0
+122-      ? totalPiBankFee *
+123-        (depositApplied / contractDeposit)
+124-      : 0;
+125-
+126-  const shipmentNetWeight =
+127-    calculateTotalNetWeight(shipment.containers);
+128-
+129-  const commissionAmount =
+130-    shipmentNetWeight *
+131-    (Number(contract.commissionPerMt) || 0);
+132-
+133-  const otherAdjustment =
+134-    Number(shipment.otherAdjustment) || 0;
+135-
+136:  const netProfit =
+137-    salesAmount -
+138-    purchaseAmount -
+139-    claimAmount -
+140-    commissionAmount -
+141-    ciBankFee -
+142-    allocatedPiBankFee +
+143-    otherAdjustment;
+144-
+145-  return {
+146-    shipmentId: shipment.id,
+147-    contractId: contract.id,
+148-    companyId: contract.companyId,
+149-    contractNumber: contract.contractNumber,
+150-    invoiceNumber:
+151-      shipment.commercialInvoiceNumber,
+152-    invoiceDate: shipment.invoiceDate,
+153-    month: shipment.invoiceDate?.slice(0, 7) || "",
+154-    customerName: contract.customerName,
+155-    material: contract.material,
+156-    currency: contract.currency,
+157-    quantity,
+158-    salesAmount,
+159-    purchaseAmount,
+160-    claimAmount,
+161-    commissionAmount,
+162-    ciBankFee,
+163-    allocatedPiBankFee,
+164-    otherAdjustment,
+165:    netProfit,
+166-    profitPerMt:
+167:      quantity > 0 ? netProfit / quantity : 0,
+168-    profitMargin:
+169-      salesAmount > 0
+170:        ? (netProfit / salesAmount) * 100
+171-        : 0,
+172-  };
+173-}
+174-
+175-export default function ProfitReportPage() {
+176-  const [contracts, setContracts] = useState<
+177-    SavedContractDraft[]
+178-  >([]);
+179-
+180-  const [shipments, setShipments] = useState<
+181-    ShipmentRecord[]
+182-  >([]);
+183-
+184-  const [loaded, setLoaded] = useState(false);
+185-
+186-  const [companyFilter, setCompanyFilter] =
+187-    useState<CompanyFilter>("japan");
+188-
+189-  const [monthFilter, setMonthFilter] =
+190-    useState("all");
+191-
+192-  useEffect(() => {
+193-    setContracts(getSavedContractDrafts());
+194-    setShipments(getSavedShipments());
+195-    setLoaded(true);
+196-  }, []);
+197-
+198-  const allRows = useMemo(() => {
+199-    const contractMap = new Map(
+200-      contracts.map((contract) => [
+201-        contract.id,
+202-        contract,
+203-      ]),
+204-    );
+205-
+206-    return shipments
+207-      .map((shipment) => {
+208-        const contract = contractMap.get(
+209-          shipment.contractId,
+210-        );
+211-
+212-        return contract
+213:          ? buildProfitRow(shipment, contract)
+214-          : null;
+215-      })
+216-      .filter(
+217-        (row): row is ProfitRow => row !== null,
+218-      )
+219-      .sort((a, b) =>
+220-        b.invoiceDate.localeCompare(a.invoiceDate),
+221-      );
+222-  }, [contracts, shipments]);
+223-
+224-  const availableMonths = useMemo(
+225-    () =>
+226-      Array.from(
+227-        new Set(
+228-          allRows
+229-            .filter(
+230-              (row) =>
+231-                row.companyId === companyFilter,
+232-            )
+233-            .map((row) => row.month)
+234-            .filter(Boolean),
+235-        ),
+236-      ).sort((a, b) => b.localeCompare(a)),
+237-    [allRows, companyFilter],
+238-  );
+239-
+240-  const rows = useMemo(
+241-    () =>
+242-      allRows.filter(
+243-        (row) =>
+244-          row.companyId === companyFilter &&
+245-          (monthFilter === "all" ||
+246-            row.month === monthFilter),
+247-      ),
+248-    [allRows, companyFilter, monthFilter],
+249-  );
+250-
+251-  const totals = useMemo(
+252-    () =>
+253-      rows.reduce(
+254-        (total, row) => ({
+255-          quantity:
+256-            total.quantity + row.quantity,
+257-          salesAmount:
+258-            total.salesAmount + row.salesAmount,
+259:          netProfit:
+260:            total.netProfit + row.netProfit,
+261-        }),
+262-        {
+263-          quantity: 0,
+264-          salesAmount: 0,
+265:          netProfit: 0,
+266-        },
+267-      ),
+268-    [rows],
+269-  );
+270-
+271-  const currency = rows[0]?.currency || "USD";
+272-
+273-  const totalProfitPerMt =
+274-    totals.quantity > 0
+275:      ? totals.netProfit / totals.quantity
+276-      : 0;
+277-
+278-  const totalProfitMargin =
+279-    totals.salesAmount > 0
+280:      ? (totals.netProfit /
+281-          totals.salesAmount) *
+282-        100
+283-      : 0;
+284-
+285-  useEffect(() => {
+286-    setMonthFilter("all");
+287-  }, [companyFilter]);
+288-
+289-  if (!loaded) {
+290-    return (
+291-      <main className="min-h-screen bg-[#f5f6f8] px-6 py-20">
+292-        <div className="mx-auto max-w-7xl">
+293-          Loading profit report...
+294-        </div>
+295-      </main>
+296-    );
+297-  }
+298-
+299-  return (
+300-    <main className="min-h-screen bg-[#f5f6f8] px-5 py-10 md:px-8">
+301-      <div className="mx-auto max-w-7xl">
+302-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+303-          <div>
+304-            <Link
+305-              href="/admin/trade/reports"
+306-              className="text-sm font-medium text-black/55 hover:text-black"
+307-            >
+308-              ← Back to Reports
+309-            </Link>
+310-
+311-            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-black/45">
+312-              Trade Reports
+313-            </p>
+314-
+315-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+316-              CI Profit Summary
+317-            </h1>
+318-
+319-            <p className="mt-2 text-sm text-black/55">
+320-              Shipment quantity, sales, costs and
+321-              net profit by CI.
+322-            </p>
+323-          </div>
+324-
+325-          <div className="flex flex-wrap gap-3">
+326-            <div className="inline-flex rounded-xl border border-black/10 bg-white p-1 shadow-sm">
+327-              <button
+328-                type="button"
+329-                onClick={() =>
+330-                  setCompanyFilter("japan")
+331-                }
+332-                className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+333-                  companyFilter === "japan"
+334-                    ? "bg-black text-white"
+335-                    : "text-black/50"
+336-                }`}
+337-              >
+338-                Japan
+339-              </button>
+340-
+341-              <button
+342-                type="button"
+343-                onClick={() =>
+344-                  setCompanyFilter("hong-kong")
+345-                }
+346-                className={`rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+347-                  companyFilter === "hong-kong"
+348-                    ? "bg-black text-white"
+349-                    : "text-black/50"
+350-                }`}
+351-              >
+352-                Hong Kong
+353-              </button>
+354-            </div>
+355-
+356-            <select
+357-              value={monthFilter}
+358-              onChange={(event) =>
+359-                setMonthFilter(
+360-                  event.target.value,
+361-                )
+362-              }
+363-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold shadow-sm outline-none"
+364-            >
+365-              <option value="all">
+366-                All Months
+367-              </option>
+368-
+369-              {availableMonths.map((month) => (
+370-                <option
+371-                  key={month}
+372-                  value={month}
+373-                >
+374-                  {month}
+375-                </option>
+376-              ))}
+377-            </select>
+378-          </div>
+379-        </div>
+380-
+381-        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+382-          <SummaryCard
+383-            label="Sold Quantity"
+384-            value={`${formatNumber(
+385-              totals.quantity,
+386-            )} MT`}
+387-          />
+388-
+389-          <SummaryCard
+390-            label="Sales Amount"
+391-            value={`${currency} ${formatMoney(
+392-              totals.salesAmount,
+393-            )}`}
+394-          />
+395-
+396-          <SummaryCard
+397-            label="Net Profit"
+398-            value={`${currency} ${formatMoney(
+399:              totals.netProfit,
+400-            )}`}
+401-          />
+402-
+403-          <SummaryCard
+404-            label="Profit per MT"
+405-            value={`${currency} ${formatMoney(
+406-              totalProfitPerMt,
+407-            )}`}
+408-          />
+409-
+410-          <SummaryCard
+411-            label="Profit Margin"
+412-            value={`${formatNumber(
+413-              totalProfitMargin,
+414-              2,
+415-            )}%`}
+416-          />
+417-        </section>
+418-
+419-        <section className="mt-7 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
+420-          {rows.length === 0 ? (
+421-            <div className="px-8 py-16 text-center">
+422-              <h2 className="text-xl font-semibold">
+423-                No CI profit records
+424-              </h2>
+425-
+426-              <p className="mt-3 text-sm text-black/50">
+427-                Create a shipment and enter
+428-                purchase and receipt data first.
+429-              </p>
+430-            </div>
+431-          ) : (
+432-            <div className="overflow-x-auto">
+433-              <table className="min-w-[1500px] border-collapse text-left text-sm">
+434-                <thead>
+435-                  <tr className="border-b border-black/10 bg-black/[0.025] text-xs uppercase tracking-wide text-black/45">
+436-                    <th className="px-4 py-4">Date</th>
+437-                    <th className="px-4 py-4">CI</th>
+438-                    <th className="px-4 py-4">Customer</th>
+439-                    <th className="px-4 py-4">Material</th>
+440-                    <th className="px-4 py-4 text-right">Quantity</th>
+441-                    <th className="px-4 py-4 text-right">Sales</th>
+442-                    <th className="px-4 py-4 text-right">Purchase</th>
+443-                    <th className="px-4 py-4 text-right">Claim</th>
+444-                    <th className="px-4 py-4 text-right">Commission</th>
+445-                    <th className="px-4 py-4 text-right">Bank Fees</th>
+446-                    <th className="px-4 py-4 text-right">Net Profit</th>
+447-                    <th className="px-4 py-4 text-right">Profit/MT</th>
+448-                    <th className="px-4 py-4 text-right">Margin</th>
+449-                  </tr>
+450-                </thead>
+451-
+452-                <tbody>
+453-                  {rows.map((row) => (
+454-                    <tr
+455-                      key={row.shipmentId}
+456-                      className="border-b border-black/5 last:border-b-0"
+457-                    >
+458-                      <td className="whitespace-nowrap px-4 py-4">
+459-                        {row.invoiceDate}
+460-                      </td>
+461-
+462-                      <td className="px-4 py-4">
+463-                        <Link
+464-                          href={`/admin/trade/contracts/${row.contractId}/shipments/${row.shipmentId}`}
+465-                          className="font-semibold hover:underline"
+466-                        >
+467-                          {row.invoiceNumber}
+468-                        </Link>
+469-
+470-                        <p className="mt-1 text-xs text-black/40">
+471-                          Contract{" "}
+472-                          {row.contractNumber}
+473-                        </p>
+474-                      </td>
+475-
+476-                      <td className="max-w-[220px] px-4 py-4 font-medium">
+477-                        {row.customerName}
+478-                      </td>
+479-
+480-                      <td className="max-w-[220px] px-4 py-4">
+481-                        {row.material}
+482-                      </td>
+483-
+484-                      <td className="whitespace-nowrap px-4 py-4 text-right">
+485-                        {formatNumber(
+486-                          row.quantity,
+487-                        )}{" "}
+488-                        MT
+489-                      </td>
+490-
+491-                      <MoneyCell
+492-                        currency={row.currency}
+493-                        value={row.salesAmount}
+494-                      />
+495-
+496-                      <MoneyCell
+497-                        currency={row.currency}
+498-                        value={row.purchaseAmount}
+499-                      />
+500-
+501-                      <MoneyCell
+502-                        currency={row.currency}
+503-                        value={row.claimAmount}
+504-                      />
+505-
+506-                      <MoneyCell
+507-                        currency={row.currency}
+508-                        value={row.commissionAmount}
+509-                      />
+510-
+511-                      <MoneyCell
+512-                        currency={row.currency}
+513-                        value={
+514-                          row.ciBankFee +
+515-                          row.allocatedPiBankFee
+516-                        }
+517-                      />
+518-
+519-                      <MoneyCell
+520-                        currency={row.currency}
+521:                        value={row.netProfit}
+522-                        strong
+523-                      />
+524-
+525-                      <MoneyCell
+526-                        currency={row.currency}
+527-                        value={row.profitPerMt}
+528-                      />
+529-
+530-                      <td className="whitespace-nowrap px-4 py-4 text-right font-semibold">
+531-                        {formatNumber(
+532-                          row.profitMargin,
+533-                          2,
+534-                        )}
+535-                        %
+536-                      </td>
+537-                    </tr>
+538-                  ))}
+539-                </tbody>
+540-              </table>
+541-            </div>
+542-          )}
+543-        </section>
+544-      </div>
+545-    </main>
+546-  );
+547-}
+548-
+549-function SummaryCard({
+550-  label,
+551-  value,
+552-}: {
+553-  label: string;
+554-  value: string;
+555-}) {
+556-  return (
+557-    <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+558-      <p className="text-xs font-semibold uppercase tracking-wide text-black/40">
+559-        {label}
+560-      </p>
+561-
+562-      <p className="mt-2 text-xl font-semibold">
+563-        {value}
+564-      </p>
+565-    </div>
+566-  );
+567-}
+568-
+569-function MoneyCell({
+570-  currency,
+571-  value,
+572-  strong = false,
+573-}: {
+574-  currency: string;
+575-  value: number;
+576-  strong?: boolean;
+577-}) {
+578-  return (
+579-    <td
+580-      className={`whitespace-nowrap px-4 py-4 text-right ${
+581-        strong ? "font-semibold" : ""
+582-      }`}
+583-    >
+584-      {currency} {formatMoney(value)}
+585-    </td>
+586-  );
+587-}
+
+===== 5. CONTRACT SHIPMENT COUNT =====
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-664-      ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-665-        warnings.push(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-666-          `Deposit Applied exceeds the remaining contract deposit by ${contract.currency} ${formatMoney(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-667-            depositApplied -
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-668-              remainingDepositBeforeThisShipment,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-669-          )}.`,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-670-        );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-671-      }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-672-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-673-      const cumulativeNetWeight =
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx:674:        relatedShipments.reduce(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-675-          (total, item) =>
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-676-            total +
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-677-            calculateTotalNetWeight(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-678-              item.containers,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-679-            ),
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-680-          0,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-681-        );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-682-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-683-      const maximumAllowedWeight =
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-684-        Number(contract.quantity) *
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-685-        1.1;
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-686-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-687-      if (
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-688-        cumulativeNetWeight >
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-689-        maximumAllowedWeight +
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-690-          0.0005
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-691-      ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-692-        warnings.push(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-693-          `Cumulative shipment weight exceeds the contract +10% limit by ${formatNumber(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-694-            cumulativeNetWeight -
+--
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-800-  }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-801-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-802-  function handleAddContainer() {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-803-    setDraftShipment(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-804-      (current) => {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-805-        if (!current) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-806-          return current;
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-807-        }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-808-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-809-        if (
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx:810:          current.containers.length >=
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-811-          MAX_CONTAINERS
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-812-        ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-813-          window.alert(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-814-            "A shipment can contain a maximum of 8 containers.",
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-815-          );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-816-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-817-          return current;
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-818-        }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-819-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-820-        return {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-821-          ...current,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-822-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-823-          containers: [
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-824-            ...current.containers,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-825-            createEmptyContainer(),
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-826-          ],
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-827-        };
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-828-      },
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-829-    );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-830-  }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-831-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-832-  function handleDeleteContainer(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-833-    containerId: string,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-834-  ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-835-    if (!draftShipment) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-836-      return;
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-837-    }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-838-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-839-    if (
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx:840:      draftShipment.containers.length <=
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-841-      1
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-842-    ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-843-      window.alert(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-844-        "At least one container is required.",
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-845-      );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-846-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-847-      return;
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-848-    }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-849-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-850-    const confirmed =
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-851-      window.confirm(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-852-        "Delete this container?",
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-853-      );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-854-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-855-    if (!confirmed) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-856-      return;
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-857-    }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-858-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-859-    setDraftShipment(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-860-      (current) => {
+--
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-940-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-941-    if (
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-942-      !value.portOfLoading.trim()
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-943-    ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-944-      errors.push(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-945-        "Port of Loading is required.",
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-946-      );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-947-    }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-948-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-949-    if (
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx:950:      value.containers.length === 0
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-951-    ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-952-      errors.push(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-953-        "At least one container is required.",
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-954-      );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-955-    }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-956-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-957-    if (
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx:958:      value.containers.length >
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-959-      MAX_CONTAINERS
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-960-    ) {
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-961-      errors.push(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-962-        "A shipment can contain a maximum of 8 containers.",
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-963-      );
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-964-    }
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-965-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-966-    const normalizedContainerNumbers =
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-967-      value.containers
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-968-        .map((container) =>
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-969-          container.containerNumber
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-970-            .trim()
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-971-            .toUpperCase(),
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-972-        )
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-973-        .filter(Boolean);
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-974-
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-975-    const uniqueContainerNumbers =
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-976-      new Set(
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-977-        normalizedContainerNumbers,
+src/app/admin/trade/contracts/[id]/shipments/[shipmentId]/page.tsx-978-      );
+--
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-566-      ],
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-567-    );
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-568-  }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-569-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-570-  function removeContainer(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-571-    containerId: string,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-572-  ) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-573-    setContainers(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-574-      (currentContainers) => {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-575-        if (
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:576:          currentContainers.length <=
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-577-          1
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-578-        ) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-579-          return currentContainers;
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-580-        }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-581-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-582-        return currentContainers.filter(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-583-          (container) =>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-584-            container.id !==
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-585-            containerId,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-586-        );
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-587-      },
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-588-    );
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-589-  }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-590-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-591-  function handleDepositChange(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-592-    value: string,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-593-  ) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-594-    setDepositAppliedAmount(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-595-      value,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-596-    );
+--
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-673-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-674-    if (!invoiceDate) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-675-      return "Invoice Date is required.";
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-676-    }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-677-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-678-    if (!portOfLoading.trim()) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-679-      return "Port of Loading is required.";
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-680-    }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-681-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-682-    if (
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:683:      containers.length === 0
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-684-    ) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-685-      return "At least one container is required.";
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-686-    }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-687-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-688-    for (
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-689-      let index = 0;
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-690-      index <
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:691:      containers.length;
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-692-      index += 1
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-693-    ) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-694-      const container =
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-695-        containers[index];
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-696-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-697-      if (
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-698-        !container.containerNumber.trim()
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-699-      ) {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-700-        return `Container ${
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-701-          index + 1
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-702-        }: Container No. is required.`;
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-703-      }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-704-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-705-      if (
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-706-        !Number.isFinite(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-707-          Number(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-708-            container.packages,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-709-          ),
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-710-        ) ||
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-711-        Number(
+--
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-823-        appliedDeposit,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-824-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-825-      depositEstimateAmount:
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-826-        depositEstimate.estimatedDepositAppliedAmount,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-827-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-828-      depositWasManuallyAdjusted,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-829-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-830-      estimatedWeightPerContainer:
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-831-        depositEstimate.estimatedWeightPerContainer,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-832-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:833:      estimatedContractContainerCount:
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:834:        depositEstimate.estimatedContractContainerCount,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-835-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-836-      claimAmount:
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-837-        appliedClaim > 0
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-838-          ? appliedClaim
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-839-          : undefined,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-840-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-841-      purchaseUnitPrice:
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-842-        Number(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-843-          contract.purchaseUnitPrice,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-844-        ) || 0,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-845-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-846-      commissionAmount:
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-847-        totalNetWeight *
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-848-        (
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-849-          Number(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-850-            contract.commissionPerMt,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-851-          ) || 0
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-852-        ),
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-853-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-854-      containers:
+--
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1253-                        </h3>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1254-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1255-                        <button
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1256-                          type="button"
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1257-                          onClick={() =>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1258-                            removeContainer(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1259-                              container.id,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1260-                            )
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1261-                          }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1262-                          disabled={
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:1263:                            containers.length <=
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1264-                            1
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1265-                          }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1266-                          className="text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-25"
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1267-                        >
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1268-                          Remove
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1269-                        </button>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1270-                      </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1271-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1272-                      <div className="mt-5 grid gap-4 md:grid-cols-3">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1273-                        <label className="block">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1274-                          <span className="text-sm font-medium">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1275-                            Container No.
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1276-                          </span>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1277-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1278-                          <input
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1279-                            value={
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1280-                              container.containerNumber
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1281-                            }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1282-                            onChange={(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1283-                              event,
+--
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1456-                    </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1457-                  </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1458-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1459-                  <div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1460-                    <p className="text-black/45">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1461-                      Current Shipment
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1462-                    </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1463-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1464-                    <p className="mt-1 font-semibold">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1465-                      {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:1466:                        depositEstimate.currentContainerCount
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1467-                      }{" "}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1468-                      containers
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1469-                    </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1470-                  </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1471-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1472-                  <div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1473-                    <p className="text-black/45">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1474-                      Estimated Contract
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1475-                    </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1476-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1477-                    <p className="mt-1 font-semibold">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1478-                      {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:1479:                        depositEstimate.estimatedContractContainerCount
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1480-                      }{" "}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1481-                      containers
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1482-                    </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1483-                  </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1484-                </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1485-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1486-                <div className="mt-5 border-t border-black/10 pt-5">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1487-                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-black/40">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1488-                    Automatic Estimate
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1489-                  </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1490-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1491-                  <p className="mt-2 text-xl font-semibold">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1492-                    {contract.currency}{" "}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1493-                    {formatMoney(
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1494-                      depositEstimate.estimatedDepositAppliedAmount,
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1495-                    )}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1496-                  </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1497-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1498-                  <p className="mt-1 text-xs text-black/45">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1499-                    PI deposit ×{" "}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1500-                    {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:1501:                      depositEstimate.currentContainerCount
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1502-                    }{" "}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1503-                    ÷{" "}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1504-                    {
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:1505:                      depositEstimate.estimatedContractContainerCount
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1506-                    }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1507-                  </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1508-                </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1509-              </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1510-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1511-              <div className="mt-6 grid gap-5 md:grid-cols-2">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1512-                <label className="block">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1513-                  <div className="flex items-center justify-between gap-4">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1514-                    <span className="text-sm font-medium">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1515-                      Deposit Applied
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1516-                    </span>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1517-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1518-                    <button
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1519-                      type="button"
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1520-                      onClick={
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1521-                        resetDepositEstimate
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1522-                      }
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1523-                      className="text-xs font-semibold text-black/55 underline underline-offset-4"
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1524-                    >
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1525-                      Reset to Estimate
+--
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1644-                Shipment Summary
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1645-              </p>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1646-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1647-              <dl className="mt-5 space-y-4 text-sm">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1648-                <div className="flex justify-between gap-4">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1649-                  <dt className="text-black/50">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1650-                    Containers
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1651-                  </dt>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1652-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1653-                  <dd className="font-semibold">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx:1654:                    {containers.length}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1655-                  </dd>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1656-                </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1657-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1658-                <div className="flex justify-between gap-4">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1659-                  <dt className="text-black/50">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1660-                    Packages
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1661-                  </dt>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1662-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1663-                  <dd className="font-semibold">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1664-                    {totalPackages}
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1665-                  </dd>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1666-                </div>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1667-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1668-                <div className="flex justify-between gap-4">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1669-                  <dt className="text-black/50">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1670-                    Net Weight
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1671-                  </dt>
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1672-
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1673-                  <dd className="font-semibold">
+src/app/admin/trade/contracts/[id]/shipments/new/page.tsx-1674-                    {formatNumber(
+--
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-234-      [
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-235-        shipments,
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-236-        piDepositAmount,
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-237-        shipmentStatus,
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-238-      ],
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-239-    );
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-240-
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-241-  const totalShippedWeight =
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-242-    useMemo(
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-243-      () =>
+src/app/admin/trade/contracts/[id]/shipments/page.tsx:244:        shipments.reduce(
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-245-          (total, shipment) =>
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-246-            total +
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-247-            calculateTotalNetWeight(
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-248-              shipment.containers,
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-249-            ),
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-250-          0,
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-251-        ),
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-252-      [shipments],
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-253-    );
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-254-
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-255-  const minimumContractQuantity =
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-256-    contractQuantity * 0.9;
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-257-
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-258-  const maximumContractQuantity =
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-259-    contractQuantity * 1.1;
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-260-
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-261-  const shipmentQuantityProgress =
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-262-    contractQuantity > 0
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-263-      ? totalShippedWeight /
+src/app/admin/trade/contracts/[id]/shipments/page.tsx-264-        contractQuantity
+--
+src/data/trade/shipments.ts-41-  /**
+src/data/trade/shipments.ts-42-   * Original gross-weight text entered
+src/data/trade/shipments.ts-43-   * by the user.
+src/data/trade/shipments.ts-44-   */
+src/data/trade/shipments.ts-45-  grossWeightInput?: string;
+src/data/trade/shipments.ts-46-
+src/data/trade/shipments.ts-47-  sealNumber?: string;
+src/data/trade/shipments.ts-48-};
+src/data/trade/shipments.ts-49-
+src/data/trade/shipments.ts-50-export type DepositEstimate = {
+src/data/trade/shipments.ts:51:  currentContainerCount: number;
+src/data/trade/shipments.ts-52-
+src/data/trade/shipments.ts-53-  averageActualWeightPerContainer: number;
+src/data/trade/shipments.ts-54-
+src/data/trade/shipments.ts-55-  /**
+src/data/trade/shipments.ts-56-   * Estimated loading standard:
+src/data/trade/shipments.ts-57-   * approximately 20 MT or 25 MT per container.
+src/data/trade/shipments.ts-58-   */
+src/data/trade/shipments.ts-59-  estimatedWeightPerContainer: number;
+src/data/trade/shipments.ts-60-
+src/data/trade/shipments.ts:61:  estimatedContractContainerCount: number;
+src/data/trade/shipments.ts-62-
+src/data/trade/shipments.ts-63-  contractDepositAmount: number;
+src/data/trade/shipments.ts-64-
+src/data/trade/shipments.ts-65-  estimatedDepositAppliedAmount: number;
+src/data/trade/shipments.ts-66-};
+src/data/trade/shipments.ts-67-
+src/data/trade/shipments.ts-68-export type ShipmentRecord = {
+src/data/trade/shipments.ts-69-  id: string;
+src/data/trade/shipments.ts-70-
+src/data/trade/shipments.ts-71-  contractId: string;
+src/data/trade/shipments.ts-72-  contractNumber: string;
+src/data/trade/shipments.ts-73-
+src/data/trade/shipments.ts-74-  shipmentSequence: ShipmentSequence;
+src/data/trade/shipments.ts-75-  shipmentLabel: string;
+src/data/trade/shipments.ts-76-
+src/data/trade/shipments.ts-77-  commercialInvoiceNumber: string;
+src/data/trade/shipments.ts-78-  invoiceDate: string;
+src/data/trade/shipments.ts-79-
+src/data/trade/shipments.ts-80-  supplierPartnerId?: string;
+src/data/trade/shipments.ts-81-  supplierLegalName?: string;
+--
+src/data/trade/shipments.ts-124-  depositEstimateAmount?: number;
+src/data/trade/shipments.ts-125-
+src/data/trade/shipments.ts-126-  /**
+src/data/trade/shipments.ts-127-   * True when the user manually changed
+src/data/trade/shipments.ts-128-   * the automatically estimated amount.
+src/data/trade/shipments.ts-129-   */
+src/data/trade/shipments.ts-130-  depositWasManuallyAdjusted?: boolean;
+src/data/trade/shipments.ts-131-
+src/data/trade/shipments.ts-132-  estimatedWeightPerContainer?: number;
+src/data/trade/shipments.ts-133-
+src/data/trade/shipments.ts:134:  estimatedContractContainerCount?: number;
+src/data/trade/shipments.ts-135-
+src/data/trade/shipments.ts-136-  /**
+src/data/trade/shipments.ts-137-   * Optional claim deducted from the
+src/data/trade/shipments.ts-138-   * amount payable for this shipment.
+src/data/trade/shipments.ts-139-   */
+src/data/trade/shipments.ts-140-  claimAmount?: number;
+src/data/trade/shipments.ts-141-
+src/data/trade/shipments.ts-142-  /**
+src/data/trade/shipments.ts-143-   * Actual amount received from the customer
+src/data/trade/shipments.ts-144-   * for the amount due shown on this CI.
+src/data/trade/shipments.ts-145-   */
+src/data/trade/shipments.ts-146-  actualAmountReceived?: number;
+src/data/trade/shipments.ts-147-
+src/data/trade/shipments.ts-148-  /**
+src/data/trade/shipments.ts-149-   * Date the CI payment was received.
+src/data/trade/shipments.ts-150-   */
+src/data/trade/shipments.ts-151-  receivedDate?: string;
+src/data/trade/shipments.ts-152-
+src/data/trade/shipments.ts-153-  /**
+src/data/trade/shipments.ts-154-   * Purchase unit price for this shipment.
+--
+src/data/trade/shipments.ts-456-  containers: ShipmentContainer[],
+src/data/trade/shipments.ts-457-) {
+src/data/trade/shipments.ts-458-  const validContainers =
+src/data/trade/shipments.ts-459-    containers.filter(
+src/data/trade/shipments.ts-460-      (container) =>
+src/data/trade/shipments.ts-461-        Number(container.netWeight) >
+src/data/trade/shipments.ts-462-        0,
+src/data/trade/shipments.ts-463-    );
+src/data/trade/shipments.ts-464-
+src/data/trade/shipments.ts-465-  if (
+src/data/trade/shipments.ts:466:    validContainers.length === 0
+src/data/trade/shipments.ts-467-  ) {
+src/data/trade/shipments.ts-468-    return 25;
+src/data/trade/shipments.ts-469-  }
+src/data/trade/shipments.ts-470-
+src/data/trade/shipments.ts-471-  const totalNetWeight =
+src/data/trade/shipments.ts-472-    calculateTotalNetWeight(
+src/data/trade/shipments.ts-473-      validContainers,
+src/data/trade/shipments.ts-474-    );
+src/data/trade/shipments.ts-475-
+src/data/trade/shipments.ts-476-  const averageWeight =
+src/data/trade/shipments.ts-477-    totalNetWeight /
+src/data/trade/shipments.ts:478:    validContainers.length;
+src/data/trade/shipments.ts-479-
+src/data/trade/shipments.ts-480-  return averageWeight < 22.5
+src/data/trade/shipments.ts-481-    ? 20
+src/data/trade/shipments.ts-482-    : 25;
+src/data/trade/shipments.ts-483-}
+src/data/trade/shipments.ts-484-
+src/data/trade/shipments.ts-485-/**
+src/data/trade/shipments.ts-486- * Estimate the number of containers for
+src/data/trade/shipments.ts-487- * the full contract.
+src/data/trade/shipments.ts-488- *
+src/data/trade/shipments.ts-489- * Math.round is used because contract
+src/data/trade/shipments.ts-490- * quantity normally includes a
+src/data/trade/shipments.ts-491- * MORE OR LESS tolerance.
+src/data/trade/shipments.ts-492- */
+src/data/trade/shipments.ts:493:export function estimateContractContainerCount(
+src/data/trade/shipments.ts-494-  contractQuantity: number,
+src/data/trade/shipments.ts-495-  estimatedWeightPerContainer: number,
+src/data/trade/shipments.ts-496-) {
+src/data/trade/shipments.ts-497-  const quantity =
+src/data/trade/shipments.ts-498-    Number(contractQuantity) || 0;
+src/data/trade/shipments.ts-499-
+src/data/trade/shipments.ts-500-  const weightStandard =
+src/data/trade/shipments.ts-501-    Number(
+src/data/trade/shipments.ts-502-      estimatedWeightPerContainer,
+src/data/trade/shipments.ts-503-    ) || 0;
+src/data/trade/shipments.ts-504-
+src/data/trade/shipments.ts-505-  if (
+src/data/trade/shipments.ts-506-    quantity <= 0 ||
+src/data/trade/shipments.ts-507-    weightStandard <= 0
+src/data/trade/shipments.ts-508-  ) {
+src/data/trade/shipments.ts-509-    return 1;
+src/data/trade/shipments.ts-510-  }
+src/data/trade/shipments.ts-511-
+src/data/trade/shipments.ts-512-  return Math.max(
+src/data/trade/shipments.ts-513-    1,
+--
+src/data/trade/shipments.ts-523- *
+src/data/trade/shipments.ts-524- * PI deposit
+src/data/trade/shipments.ts-525- * x shipment container count
+src/data/trade/shipments.ts-526- * / estimated contract container count
+src/data/trade/shipments.ts-527- */
+src/data/trade/shipments.ts-528-export function estimateShipmentDeposit(
+src/data/trade/shipments.ts-529-  containers: ShipmentContainer[],
+src/data/trade/shipments.ts-530-  contractQuantity: number,
+src/data/trade/shipments.ts-531-  contractDepositAmount: number,
+src/data/trade/shipments.ts-532-): DepositEstimate {
+src/data/trade/shipments.ts:533:  const validContainerCount =
+src/data/trade/shipments.ts-534-    containers.filter(
+src/data/trade/shipments.ts-535-      (container) =>
+src/data/trade/shipments.ts-536-        Number(container.netWeight) >
+src/data/trade/shipments.ts-537-        0,
+src/data/trade/shipments.ts-538-    ).length;
+src/data/trade/shipments.ts-539-
+src/data/trade/shipments.ts:540:  const currentContainerCount =
+src/data/trade/shipments.ts-541-    Math.max(
+src/data/trade/shipments.ts:542:      validContainerCount,
+src/data/trade/shipments.ts:543:      containers.length,
+src/data/trade/shipments.ts-544-      1,
+src/data/trade/shipments.ts-545-    );
+src/data/trade/shipments.ts-546-
+src/data/trade/shipments.ts-547-  const totalNetWeight =
+src/data/trade/shipments.ts-548-    calculateTotalNetWeight(
+src/data/trade/shipments.ts-549-      containers,
+src/data/trade/shipments.ts-550-    );
+src/data/trade/shipments.ts-551-
+src/data/trade/shipments.ts-552-  const averageActualWeightPerContainer =
+src/data/trade/shipments.ts:553:    currentContainerCount > 0
+src/data/trade/shipments.ts-554-      ? totalNetWeight /
+src/data/trade/shipments.ts:555:        currentContainerCount
+src/data/trade/shipments.ts-556-      : 0;
+src/data/trade/shipments.ts-557-
+src/data/trade/shipments.ts-558-  const estimatedWeightPerContainer =
+src/data/trade/shipments.ts-559-    estimateContainerWeightStandard(
+src/data/trade/shipments.ts-560-      containers,
+src/data/trade/shipments.ts-561-    );
+src/data/trade/shipments.ts-562-
+src/data/trade/shipments.ts:563:  const estimatedContractContainerCount =
+src/data/trade/shipments.ts:564:    estimateContractContainerCount(
+src/data/trade/shipments.ts-565-      contractQuantity,
+src/data/trade/shipments.ts-566-      estimatedWeightPerContainer,
+src/data/trade/shipments.ts-567-    );
+src/data/trade/shipments.ts-568-
+src/data/trade/shipments.ts-569-  const depositAmount =
+src/data/trade/shipments.ts-570-    Math.max(
+src/data/trade/shipments.ts-571-      Number(
+src/data/trade/shipments.ts-572-        contractDepositAmount,
+src/data/trade/shipments.ts-573-      ) || 0,
+src/data/trade/shipments.ts-574-      0,
+src/data/trade/shipments.ts-575-    );
+src/data/trade/shipments.ts-576-
+src/data/trade/shipments.ts-577-  const estimatedDepositAppliedAmount =
+src/data/trade/shipments.ts:578:    estimatedContractContainerCount >
+src/data/trade/shipments.ts-579-    0
+src/data/trade/shipments.ts-580-      ? depositAmount *
+src/data/trade/shipments.ts-581-        (
+src/data/trade/shipments.ts:582:          currentContainerCount /
+src/data/trade/shipments.ts:583:          estimatedContractContainerCount
+src/data/trade/shipments.ts-584-        )
+src/data/trade/shipments.ts-585-      : 0;
+src/data/trade/shipments.ts-586-
+src/data/trade/shipments.ts-587-  return {
+src/data/trade/shipments.ts:588:    currentContainerCount,
+src/data/trade/shipments.ts-589-
+src/data/trade/shipments.ts-590-    averageActualWeightPerContainer,
+src/data/trade/shipments.ts-591-
+src/data/trade/shipments.ts-592-    estimatedWeightPerContainer,
+src/data/trade/shipments.ts-593-
+src/data/trade/shipments.ts:594:    estimatedContractContainerCount,
+src/data/trade/shipments.ts-595-
+src/data/trade/shipments.ts-596-    contractDepositAmount:
+src/data/trade/shipments.ts-597-      depositAmount,
+src/data/trade/shipments.ts-598-
+src/data/trade/shipments.ts-599-    estimatedDepositAppliedAmount,
+src/data/trade/shipments.ts-600-  };
+src/data/trade/shipments.ts-601-}
+src/data/trade/shipments.ts-602-
+src/data/trade/shipments.ts-603-function getSavedShipmentControls():
+src/data/trade/shipments.ts-604-  ContractShipmentControl[] {
+src/data/trade/shipments.ts-605-  if (!canUseBrowserStorage()) {
+src/data/trade/shipments.ts-606-    return [];
+src/data/trade/shipments.ts-607-  }
+src/data/trade/shipments.ts-608-
+src/data/trade/shipments.ts-609-  try {
+src/data/trade/shipments.ts-610-    const rawValue =
+src/data/trade/shipments.ts-611-      window.localStorage.getItem(
+src/data/trade/shipments.ts-612-        SHIPMENT_CONTROL_STORAGE_KEY,
+src/data/trade/shipments.ts-613-      );
+src/data/trade/shipments.ts-614-
+--
+src/data/trade/shipments.ts-697-    ContractShipmentStatus,
+src/data/trade/shipments.ts-698-): DepositReconciliation {
+src/data/trade/shipments.ts-699-  const normalizedPiDeposit =
+src/data/trade/shipments.ts-700-    Math.max(
+src/data/trade/shipments.ts-701-      Number(piDepositAmount) ||
+src/data/trade/shipments.ts-702-        0,
+src/data/trade/shipments.ts-703-      0,
+src/data/trade/shipments.ts-704-    );
+src/data/trade/shipments.ts-705-
+src/data/trade/shipments.ts-706-  const totalDepositApplied =
+src/data/trade/shipments.ts:707:    shipments.reduce(
+src/data/trade/shipments.ts-708-      (total, shipment) =>
+src/data/trade/shipments.ts-709-        total +
+src/data/trade/shipments.ts-710-        (
+src/data/trade/shipments.ts-711-          Number(
+src/data/trade/shipments.ts-712-            shipment.depositAppliedAmount,
+src/data/trade/shipments.ts-713-          ) || 0
+src/data/trade/shipments.ts-714-        ),
+src/data/trade/shipments.ts-715-      0,
+src/data/trade/shipments.ts-716-    );
+src/data/trade/shipments.ts-717-
+src/data/trade/shipments.ts-718-  const difference =
+src/data/trade/shipments.ts-719-    totalDepositApplied -
+src/data/trade/shipments.ts-720-    normalizedPiDeposit;
+src/data/trade/shipments.ts-721-
+src/data/trade/shipments.ts-722-  const remainingDeposit =
+src/data/trade/shipments.ts-723-    normalizedPiDeposit -
+src/data/trade/shipments.ts-724-    totalDepositApplied;
+src/data/trade/shipments.ts-725-
+src/data/trade/shipments.ts-726-  const isMatched =
+src/data/trade/shipments.ts-727-    Math.abs(difference) <= 0.01;

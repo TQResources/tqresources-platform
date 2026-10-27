@@ -1,0 +1,486 @@
+import type {
+  CompanyId,
+  CustomerProductProfile,
+} from "./types";
+
+export const customerProductProfiles:
+  CustomerProductProfile[] = [
+    {
+      id:
+        "broadway-metal-trading-off-grade-aluminum-hong-kong",
+      companyId: "hong-kong",
+      customerId: "broadway-metal-trading",
+      productId:
+        "off-grade-aluminum-alloy-ingot",
+
+      customProductName:
+        "Aluminum Ingots",
+
+      customContractDescription:
+        "Aluminum Ingots complying with the mutually agreed chemical composition and specifications.",
+
+      customInvoiceDescription:
+        "Aluminum Ingots",
+
+      settings: {
+        currency: "USD",
+
+        incoterm: "CFR",
+
+        loadingPort: "",
+
+        destinationPort:
+          "Ningbo Port, China",
+
+        depositRate: 15,
+
+        paymentTerms:
+          "15% deposit by T/T and 85% balance by T/T against scan of shipping documents.",
+
+        shipmentTerms:
+          "Within the mutually agreed delivery period.",
+
+        packaging:
+          "Bundles or export packing as mutually agreed.",
+
+        quantityTolerance:
+          "+/-10%",
+
+        qualityTerms:
+          "The goods shall comply with the mutually agreed chemical composition and specifications.",
+
+        inspectionTerms:
+          "Quality and quantity shall be determined at the port of loading.",
+
+        claimTerms:
+          "Any claim shall be submitted in writing together with supporting documents within the agreed claim period.",
+
+        arbitration:
+          "Any dispute arising from or in connection with this contract shall be submitted to arbitration in Hong Kong.",
+
+        requiredDocuments: [
+          "Invoice",
+          "Packing List",
+          "Loading Pictures",
+          "Analysis Report",
+          "Bill of Lading",
+          "Certificate of Origin",
+        ],
+      },
+
+      notes:
+        "Broadway Metal Trading customer profile. Contract product name is Aluminum Ingots. Buyer and consignee are different parties and consignee details should be entered separately for each contract.",
+
+      active: true,
+    },
+
+
+    {
+      id: "ningbo-juzhou-adc12-japan",
+
+      companyId: "japan",
+
+      customerId: "ningbo-juzhou",
+
+      productId:
+        "adc12-aluminum-alloy-ingot",
+
+      customProductName:
+        "ALUMINIUM ALLOY INGOT",
+
+      customContractDescription:
+        "Aluminium Alloy Ingot complying with the mutually agreed chemical composition and specifications.",
+
+      customInvoiceDescription:
+        "ALUMINIUM ALLOY INGOT",
+
+      settings: {
+        currency: "USD",
+        incoterm: "CFR",
+
+        loadingPort: "Any Port, Cambodia",
+        destinationPort: "Ningbo Port, China",
+
+        depositRate: 20,
+
+        paymentTerms:
+          "20% deposit by T/T and 80% balance by T/T against scan of shipping documents.",
+
+        shipmentTerms:
+          "Within the mutually agreed delivery period.",
+
+        packaging:
+          "Loose loading or export packing as mutually agreed.",
+
+        quantityTolerance:
+          "+/-10%",
+
+        qualityTerms:
+          "The goods shall comply with the mutually agreed chemical composition and specifications.",
+
+        inspectionTerms:
+          "Quality and quantity shall be determined at the port of loading.",
+
+        claimTerms:
+          "Any claim shall be submitted in writing together with supporting documents within the agreed claim period.",
+
+        arbitration:
+          "Any dispute arising from or in connection with this contract shall be submitted to arbitration in Hong Kong.",
+
+        requiredDocuments: [
+          "Invoice",
+          "Packing List",
+          "Loading Pictures",
+          "Analysis Report",
+          "Bill of Lading",
+          "Certificate of Origin",
+        ],
+      },
+
+      notes:
+        "Formal Ningbo Juzhou contract profile. Replaces the initial temporary setup.",
+
+      active: true,
+    },
+
+    {
+      id: "baoding-longda-zinc-japan",
+
+      companyId: "japan",
+
+      customerId: "baoding-longda",
+
+      productId: "zinc-ingot-99995",
+
+      customProductName:
+        "Special High Grade Zinc Ingots",
+
+      customContractDescription:
+        "Special High Grade Zinc Ingots with Zn purity of 99.995% minimum.",
+
+      customInvoiceDescription:
+        "Special High Grade Zinc Ingots",
+
+      settings: {
+        currency: "USD",
+        incoterm: "CIF",
+
+        loadingPort: "",
+        destinationPort: "",
+
+        depositRate: 0,
+
+        paymentTerms:
+          "100% payment by T/T against Commercial Invoice before shipment.",
+
+        shipmentTerms:
+          "Shipment shall be made within the period mutually agreed by both parties.",
+
+        packaging:
+          "Packed in approximately 1 MT bundles.",
+
+        quantityTolerance:
+          "±5% at seller's option.",
+
+        qualityTerms:
+          "Zinc purity shall be Zn 99.995% minimum.",
+
+        inspectionTerms:
+          "Quality and quantity shall be determined at the port of loading.",
+
+        claimTerms:
+          "Any claim shall be submitted in writing together with supporting documents within the agreed claim period.",
+
+        arbitration:
+          "Any dispute arising from or in connection with this contract shall be submitted to arbitration in Hong Kong.",
+
+        requiredDocuments: [
+          "Commercial Invoice",
+          "Packing List",
+          "Bill of Lading",
+          "Analysis Report",
+        ],
+      },
+
+      notes:
+        "Deposit rate is 0%. Proforma Invoice is normally not required.",
+
+      active: true,
+    },
+ {
+  id: "pt-alumindo-usa-aluminum-sows-hong-kong",
+
+
+
+  customerId: "pt-alumindo-alloy-abadi",
+
+  productId: "usa-aluminum-sows",
+
+  customProductName: "ALUMINIUM ALLOY",
+
+customContractDescription:
+  "Aluminium alloy sows from USA. Detailed specifications as per the specification sheet agreed by both parties.",
+
+customInvoiceDescription:
+  "ALUMINIUM ALLOY",
+
+  settings: {
+    currency: "USD",
+    incoterm: "CIF",
+
+    loadingPort: "Any Port, USA",
+
+    destinationPort:
+      "Jakarta Port, Indonesia",
+
+    depositRate: 0,
+
+    paymentTerms:
+      "100% payment by T/T against documents 7 working days before shipment arrival. After receiving the full payment, the seller should do telex release.",
+
+    shipmentTerms:
+      "Within 30 days after signing the contract.",
+
+    packaging: "Loose",
+
+    quantityTolerance: "±10%",
+
+    qualityTerms:
+      "As per mentioned above agreed standard specificaiton, ALSO FREE FROM TOXIC CHEMICALS, RADIOACTIVE MATERIALS, AND EXPLOSIVES, ORGANIC MATTERS ORIGINATED FROM ANIMALS OR PLANTS WITH DANGER OF EPIDEMIC DISEASES OR MEDICAL WASTE.",
+
+    inspectionTerms: "",
+
+    claimTerms:
+      "Weight Shortage consideration only on receipt of weight bridge slip. Both weigh shortage claim and quality claim should be filed within 14 days after the cargo arrival at the buyer's factory.",
+
+    arbitration: "",
+
+    requiredDocuments: [
+      "Commercial Invoice",
+      "Packing List",
+      "Loading Pictures",
+      "Bill of Lading",
+    ],
+  },
+
+  notes:
+    "Long-term Indonesia customer template. Keep the sales contract concise. Do not add arbitration unless separately agreed.",
+
+  active: true,
+
+},
+
+    {
+      id:
+        "delta-metal-changchun-off-grade-aluminum-alloy-ingot-japan",
+
+      companyId: "japan",
+
+      customerId:
+        "delta-metal-changchun",
+
+      productId:
+        "off-grade-aluminum-alloy-ingot",
+
+      customProductName:
+        "ALUMINIUM ALLOY INGOT",
+
+      customContractDescription:
+        "Off grade aluminum alloy ingots complying with the mutually agreed chemical composition and specifications.",
+
+      customInvoiceDescription:
+        "OFF GRADE ALUMINUM ALLOY INGOT",
+
+      settings: {
+        currency: "USD",
+        incoterm: "CFR",
+
+        loadingPort: "",
+        destinationPort:
+          "Dalian Port, China",
+
+        depositRate: 0,
+
+        paymentTerms:
+          "100% prepayment by TT against scan of documents",
+
+        shipmentTerms:
+          "Within the mutually agreed delivery period.",
+
+        packaging:
+          "Bundles or export packing as mutually agreed.",
+
+        quantityTolerance:
+          "+/-10%",
+
+        qualityTerms:
+          "The goods shall comply with the mutually agreed chemical composition and specifications.",
+
+        inspectionTerms:
+          "Quality and quantity shall be determined at the port of loading.",
+
+        claimTerms:
+          "Any claim shall be submitted in writing together with supporting documents within the agreed claim period.",
+
+        arbitration:
+          "Any dispute arising from or in connection with this contract shall be submitted to arbitration in Hong Kong.",
+
+        requiredDocuments: [
+          "Invoice",
+          "Packing List",
+          "Loading Pictures",
+          "Analysis Report",
+          "Bill of Lading",
+          "Certificate of Origin",
+        ],
+      },
+
+      notes:
+        "Delta Metal Changchun profile. Contract material defaults to ALUMINIUM ALLOY INGOT. Internal product remains Off Grade Aluminum Alloy Ingot. CFR Dalian, deposit 0%.",
+
+      active: true,
+    },
+
+    {
+      id:
+        "shenzhen-gechuang-off-grade-aluminum-hong-kong",
+
+      companyId: "hong-kong",
+
+      customerId:
+        "shenzhen-gechuang-aluminum",
+
+      productId:
+        "off-grade-aluminum-alloy-ingot",
+
+      customProductName:
+        "ALUMINIUM ALLOY INGOT",
+
+      customContractDescription:
+        "Aluminium alloy ingots complying with the mutually agreed chemical composition and specifications.",
+
+      customInvoiceDescription:
+        "ALUMINIUM ALLOY INGOT",
+
+      settings: {
+        currency: "USD",
+        incoterm: "CFR",
+
+        loadingPort:
+          "Any Port, Indonesia",
+
+        destinationPort:
+          "Yantian Port, China",
+
+        depositRate: 0,
+
+        paymentTerms:
+          "100% balance by TT within 10 days before ETA against scan of documents",
+
+        shipmentTerms:
+          "Within the mutually agreed delivery period.",
+
+        packaging:
+          "Packed in bundles suitable for international shipment.",
+
+        quantityTolerance:
+          "+/-10%",
+
+        qualityTerms:
+          "The goods shall comply with the mutually agreed chemical composition and specifications.",
+
+        inspectionTerms:
+          "Quality and quantity shall be determined at the port of loading.",
+
+        claimTerms:
+          "Any claim shall be submitted in writing together with supporting documents within the agreed claim period.",
+
+        arbitration: "",
+
+        requiredDocuments: [
+          "Invoice",
+          "Packing List",
+          "Loading Pictures",
+          "Analysis Report",
+          "Bill of Lading",
+          "Certificate of Origin",
+        ],
+      },
+
+      notes:
+        "Hong Kong company profile. Use CFR, not CNF. Tangent Trading is the default contract supplier.",
+
+      active: true,
+    },
+
+
+    {
+      id: "yongkang-zongjun-aluminum-ingots-hong-kong",
+      companyId: "hong-kong",
+      customerId: "yongkang-zongjun-trading",
+      productId: "off-grade-aluminum-alloy-ingot",
+      customProductName:
+        "ALUMINIUM INGOTS",
+      customContractDescription:
+        "Aluminium Ingots complying with the mutually agreed chemical composition and specifications.",
+      customInvoiceDescription:
+        "ALUMINIUM INGOTS",
+      settings: {
+        currency: "USD",
+        incoterm: "CFR",
+        loadingPort: "",
+        destinationPort:
+          "Ningbo Port, China",
+        depositRate: 10,
+        paymentTerms:
+          "10% deposit by T/T and 90% balance by T/T against scan of shipping documents.",
+        shipmentTerms:
+          "Within the mutually agreed delivery period.",
+        packaging:
+          "Bundles or export packing as mutually agreed.",
+        quantityTolerance:
+          "+/-10%",
+        qualityTerms:
+          "The goods shall comply with the mutually agreed chemical composition and specifications.",
+        inspectionTerms:
+          "Quality and quantity shall be determined at the port of loading.",
+        claimTerms:
+          "Any claim shall be submitted in writing together with supporting documents within the agreed claim period.",
+        arbitration:
+          "Any dispute arising from or in connection with this contract shall be submitted to arbitration in Hong Kong.",
+        requiredDocuments: [
+          "Invoice",
+          "Packing List",
+          "Loading Pictures",
+          "Analysis Report",
+          "Bill of Lading",
+          "Certificate of Origin",
+        ],
+      },
+      notes:
+        "Yongkang Zongjun Trading profile. Contract product name is ALUMINIUM INGOTS. Contract terms follow the Broadway Metal Trading template. CFR Ningbo, 10% deposit and 90% balance against scan of shipping documents.",
+      active: true,
+    },
+
+  ];
+
+export function getCustomerProductProfile(
+  companyId: CompanyId,
+  customerId: string,
+  productId: string,
+) {
+  return customerProductProfiles.find(
+    (profile) =>
+      (!profile.companyId ||
+        profile.companyId === companyId) &&
+      profile.customerId === customerId &&
+      profile.productId === productId &&
+      profile.active,
+  );
+}
+
+export function getActiveCustomerProductProfiles() {
+  return customerProductProfiles.filter(
+    (profile) => profile.active,
+  );
+}

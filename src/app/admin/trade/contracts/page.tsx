@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import {
+  completeContractDraft,
   deleteContractDraft,
   getSavedContractDrafts,
   type SavedContractDraft,
@@ -41,7 +42,7 @@ type StatusFilter =
   | "all"
   | SavedContractDraft["status"];
 
-type SellerFilter =
+type SupplierFilter =
   | "all"
   | SavedContractDraft["companyId"];
 
@@ -183,8 +184,8 @@ export default function ContractListPage() {
 
   const [
     sellerFilter,
-    setSellerFilter,
-  ] = useState<SellerFilter>(
+    setSupplierFilter,
+  ] = useState<SupplierFilter>(
     "all",
   );
 
@@ -242,7 +243,7 @@ export default function ContractListPage() {
               contract.status ===
                 statusFilter;
 
-            const matchesSeller =
+            const matchesSupplier =
               sellerFilter === "all" ||
               contract.companyId ===
                 sellerFilter;
@@ -250,7 +251,7 @@ export default function ContractListPage() {
             return (
               matchesSearch &&
               matchesStatus &&
-              matchesSeller
+              matchesSupplier
             );
           },
         );
@@ -258,6 +259,32 @@ export default function ContractListPage() {
       return [
         ...matchingContracts,
       ].sort((a, b) => {
+        // Completed contracts always stay at the bottom.
+        const aCompleted =
+          a.status === "completed";
+        const bCompleted =
+          b.status === "completed";
+
+        if (aCompleted && !bCompleted) {
+          return 1;
+        }
+
+        if (!aCompleted && bCompleted) {
+          return -1;
+        }
+
+        // Completed contracts are always sorted
+        // by contract number, ascending.
+        if (aCompleted && bCompleted) {
+          return a.contractNumber.localeCompare(
+            b.contractNumber,
+            undefined,
+            {
+              numeric: true,
+            },
+          );
+        }
+
         if (
           sortOption ===
           "contract-asc"
@@ -319,7 +346,7 @@ export default function ContractListPage() {
   function handleClearFilters() {
     setSearchText("");
     setStatusFilter("all");
-    setSellerFilter("all");
+    setSupplierFilter("all");
     setSortOption("newest");
   }
 
@@ -327,6 +354,27 @@ export default function ContractListPage() {
     setContracts(
       getSavedContractDrafts(),
     );
+  }
+
+  function handleComplete(
+    contract: SavedContractDraft,
+  ) {
+    const confirmed =
+      window.confirm(
+        `Mark contract ${contract.contractNumber} as completed?\n\n` +
+          "This confirms that the customer balance has been paid " +
+          "and the cargo has been released.",
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    completeContractDraft(
+      contract.id,
+    );
+
+    refreshContracts();
   }
 
   function handleDelete(
@@ -660,6 +708,9 @@ export default function ContractListPage() {
                 <option value="confirmed">
                   Confirmed
                 </option>
+                <option value="completed">
+                  Completed
+                </option>
                 <option value="cancelled">
                   Cancelled
                 </option>
@@ -668,21 +719,21 @@ export default function ContractListPage() {
 
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-black/45">
-                Seller
+                Supplier
               </span>
 
               <select
                 value={sellerFilter}
                 onChange={(event) =>
-                  setSellerFilter(
+                  setSupplierFilter(
                     event.target
-                      .value as SellerFilter,
+                      .value as SupplierFilter,
                   )
                 }
                 className="w-full rounded-xl border border-black/15 bg-white px-4 py-3 text-sm outline-none transition focus:border-black"
               >
                 <option value="all">
-                  All Sellers
+                  All Suppliers
                 </option>
                 <option value="japan">
                   Japan Company
@@ -805,7 +856,7 @@ export default function ContractListPage() {
                     </TableHeading>
 
                     <TableHeading>
-                      Seller
+                      Supplier
                     </TableHeading>
 
                     <TableHeading>
@@ -857,7 +908,9 @@ export default function ContractListPage() {
 
                         <TableCell>
                           {
-                            contract.companyName
+                            contract.supplierShortName ||
+                            contract.supplierLegalName ||
+                            "N/A"
                           }
                         </TableCell>
 
@@ -906,6 +959,21 @@ export default function ContractListPage() {
                               View
                             </Link>
 
+                            {contract.status ===
+                              "confirmed" && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleComplete(
+                                    contract,
+                                  )
+                                }
+                                className="rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-50"
+                              >
+                                Complete
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               onClick={() =>
@@ -942,18 +1010,27 @@ function StatusBadge({
   status:
     SavedContractDraft["status"];
 }) {
-  const styles = {
+  const styles: Record<
+    SavedContractDraft["status"],
+    string
+  > = {
     draft:
       "bg-amber-100 text-amber-800",
     confirmed:
       "bg-green-100 text-green-800",
+    completed:
+      "bg-blue-100 text-blue-700",
     cancelled:
       "bg-red-100 text-red-700",
   };
 
-  const labels = {
+  const labels: Record<
+    SavedContractDraft["status"],
+    string
+  > = {
     draft: "Draft",
     confirmed: "Confirmed",
+    completed: "Completed",
     cancelled: "Cancelled",
   };
 

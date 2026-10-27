@@ -10,6 +10,7 @@ import {
 
 import type { SavedContractDraft } from "../../data/trade/storage";
 import { getCustomerById } from "../../data/trade/customers";
+import { TradePdfHeader } from "./TradePdfHeader";
 
 type ProformaInvoicePdfProps = {
   contract: SavedContractDraft;
@@ -131,6 +132,7 @@ const styles = StyleSheet.create({
 
   japanCompanyBlock: {
     width: "60%",
+    minHeight: 58,
     alignItems: "flex-start",
   },
 
@@ -142,35 +144,41 @@ const styles = StyleSheet.create({
   },
 
   japanContactLine: {
+    marginTop: "auto",
     fontSize: 6.55,
     color: COLORS.muted,
     textAlign: "left",
-    lineHeight: 1.28,
-    marginTop: 2,
+    lineHeight: 1.2,
   },
 
   japanLogoBlock: {
     width: "37%",
+    minHeight: 58,
     alignItems: "flex-end",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     paddingTop: 0,
-    marginTop: -5,
+    marginTop: 0,
   },
 
   japanLogo: {
-    width: 154,
-    height: 46,
+    width: 108,
+    height: 31,
     objectFit: "contain",
     objectPosition: "right center",
   },
 
 
+  japanLogoContacts: {
+    marginTop: "auto",
+    alignItems: "flex-end",
+  },
+
   japanLogoContact: {
-    marginTop: 2,
+    marginTop: 1,
     fontSize: 6.25,
     color: COLORS.muted,
     textAlign: "right",
-    lineHeight: 1.2,
+    lineHeight: 1.12,
   },
 
   japaneseSubtitle: {
@@ -185,21 +193,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    minHeight: 66,
-    paddingBottom: 10,
-    borderBottomWidth: 1.1,
+    minHeight: 58,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
     borderBottomColor: COLORS.accent,
   },
 
   logoBlock: {
     width: "36%",
-    justifyContent: "center",
-    paddingTop: 2,
+    justifyContent: "flex-start",
+    paddingTop: 0,
   },
 
   logo: {
-    width: 168,
-    height: 51,
+    width: 112,
+    height: 34,
     objectFit: "contain",
     objectPosition: "left center",
   },
@@ -319,12 +327,12 @@ metaLabel: {
   width: 64,
   textAlign: "right",
   position: "relative",
-  left: 42,
+  left: 30,
   fontSize: 6.2,
   fontWeight: 700,
   color: COLORS.muted,
   letterSpacing: 0.25,
-  marginRight: 7,
+  marginRight: 20,
 },
 
 metaValue: {
@@ -621,8 +629,13 @@ metaValue: {
   bankPairValue: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 7,
     paddingVertical: 4,
+    paddingHorizontal: 7,
+  },
+
+  japanBankAddressRow: {
+    borderBottomWidth: 0.4,
+    borderBottomColor: COLORS.border,
   },
 
   bankLabel: {
@@ -634,9 +647,10 @@ metaValue: {
   },
 
   bankLabelText: {
-    fontSize: 5.9,
+    fontSize: 5.6,
     fontWeight: 700,
     color: COLORS.muted,
+    lineHeight: 1.05,
   },
 
   bankValue: {
@@ -661,6 +675,11 @@ metaValue: {
   borderBottomColor: COLORS.ink,
 },
 
+  japanPaymentDeadlineBox: {
+    borderBottomWidth: 0.7,
+    borderBottomColor: COLORS.ink,
+  },
+
   paymentDeadlineLabel: {
     fontSize: 6.8,
     fontWeight: 700,
@@ -675,11 +694,20 @@ metaValue: {
   color: COLORS.ink,
 },
 
+  japanSignatureSection: {
+    marginTop: "auto",
+    paddingTop: 6,
+    borderTopWidth: 0,
+    borderTopColor: COLORS.white,
+  },
+
   signatureSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 14,
-    paddingTop: 0,
+    marginTop: "auto",
+    paddingTop: 9,
+    borderTopWidth: 0,
+    borderTopColor: COLORS.white,
   },
 
   signatureBox: {
@@ -703,19 +731,33 @@ metaValue: {
     maxWidth: 215,
   },
 
+  japanStampImage: {
+    left: 12,
+    bottom: 10,
+    width: 72,
+    height: 72,
+  },
+
   stampImage: {
     position: "absolute",
-    left: 16,
-    bottom: 12,
-    width: 58,
-    height: 58,
+    left: 14,
+    bottom: 10,
+    width: 72,
+    height: 72,
     objectFit: "contain",
+  },
+
+  japanSignatureImage: {
+    left: 94,
+    bottom: 27,
+    width: 83,
+    height: 33,
   },
 
   signatureImage: {
     position: "absolute",
-    left: 88,
-    bottom: 25,
+    left: 96,
+    bottom: 27,
     width: 83,
     height: 33,
     objectFit: "contain",
@@ -862,7 +904,7 @@ function addressLinesFromCustomer(
   fallback: string,
 ) {
   if (customer) {
-    return [
+    const address = [
       customer.address.line1,
       customer.address.line2,
       customer.address.city,
@@ -870,16 +912,19 @@ function addressLinesFromCustomer(
       customer.address.country,
     ]
       .map((item) => item?.trim())
-      .filter(
-        (item): item is string =>
-          Boolean(item),
-      );
+      .filter((item): item is string => Boolean(item))
+      .join(", ");
+
+    return address ? [address] : [];
   }
 
-  return fallback
+  const address = fallback
     .split(/\r?\n|,/)
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .join(", ");
+
+  return address ? [address] : [];
 }
 
 function DetailRow({
@@ -931,12 +976,23 @@ function SectionHeading({
 function BankRow({
   label,
   value,
+  noBottomBorder = false,
 }: {
   label: string;
   value: string;
+  noBottomBorder?: boolean;
 }) {
   return (
-    <View style={styles.bankRow}>
+    <View
+      style={
+        noBottomBorder
+          ? [
+              styles.bankRow,
+              styles.japanBankAddressRow,
+            ]
+          : styles.bankRow
+      }
+    >
       <View style={styles.bankLabel}>
         <Text style={styles.bankLabelText}>
           {label}
@@ -1056,100 +1112,11 @@ export default function ProformaInvoicePdf({
         orientation="portrait"
         style={[styles.page, isJapan ? styles.japanesePage : {}]}
       >
-        <View style={styles.header}>
-          {isJapan ? (
-            <>
-              <View style={styles.japanCompanyBlock}>
-                <Text style={styles.companyName}>
-                  {seller.name}
-                </Text>
-                <Text style={styles.companyName}>
-                  {JAPAN_SELLER.localName}
-                </Text>
-
-                {seller.headerAddressLines.map((line, index) => (
-                  <Text
-                    key={`header-address-${index}`}
-                    style={styles.japanCompanyAddress}
-                  >
-                    {index === 0 ? (
-                      <Text style={styles.companyContactLabel}>
-                        ADDRESS:{" "}
-                      </Text>
-                    ) : null}
-                    {line}
-                  </Text>
-                ))}
-
-                <Text style={styles.japanContactLine}>
-                  <Text style={styles.companyContactLabel}>
-                    TEL:{" "}
-                  </Text>
-                  {seller.telephone}
-                </Text>
-              </View>
-
-              <View style={styles.japanLogoBlock}>
-                <Image
-                  src={publicAsset(assets.logo)}
-                  style={styles.japanLogo}
-                />
-                <Text style={styles.japanLogoContact}>
-                  <Text style={styles.companyContactLabel}>
-                    EMAIL:{" "}
-                  </Text>
-                  {seller.email}
-                </Text>
-                <Text style={styles.japanLogoContact}>
-                  <Text style={styles.companyContactLabel}>
-                    WEBSITE:{" "}
-                  </Text>
-                  {seller.website}
-                </Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.logoBlock}>
-                <Image
-                  src={publicAsset(assets.logo)}
-                  style={styles.logo}
-                />
-              </View>
-
-              <View style={styles.companyBlock}>
-                <Text style={styles.companyName}>
-                  {seller.name}
-                </Text>
-
-                {seller.headerAddressLines.map((line, index) => (
-                  <Text
-                    key={`header-address-${index}`}
-                    style={styles.companyAddress}
-                  >
-                    <Text style={styles.companyContactLabel}>
-                      {index === 0 ? "ADDRESS: " : ""}
-                    </Text>
-                    {line}
-                  </Text>
-                ))}
-
-                <Text style={styles.companyContactLine}>
-                  <Text style={styles.companyContactLabel}>TEL: </Text>
-                  {seller.telephone}
-                  {"   ·   "}
-                  <Text style={styles.companyContactLabel}>EMAIL: </Text>
-                  {seller.email}
-                </Text>
-
-                <Text style={styles.companyContactLine}>
-                  <Text style={styles.companyContactLabel}>WEBSITE: </Text>
-                  {seller.website}
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
+        <TradePdfHeader
+          seller={seller}
+          logoSrc={publicAsset(assets.logo)}
+          isJapan={isJapan}
+        />
 
         <View style={styles.titleSection}>
           {isJapan ? (
@@ -1536,9 +1503,19 @@ export default function ProformaInvoicePdf({
                   : "BANK ADDRESS"
               }
               value={bank.bankAddress}
+              noBottomBorder={false}
             />
 
-            <View style={styles.paymentDeadlineBox}>
+            <View
+              style={
+                isJapan
+                  ? [
+                      styles.paymentDeadlineBox,
+                      styles.japanPaymentDeadlineBox,
+                    ]
+                  : styles.paymentDeadlineBox
+              }
+            >
               <Text style={styles.paymentDeadlineLabel}>
                 LATEST PAYMENT DATE :
               </Text>
@@ -1551,7 +1528,14 @@ export default function ProformaInvoicePdf({
         </View>
 
         <View
-          style={styles.signatureSection}
+          style={
+            isJapan
+              ? [
+                  styles.signatureSection,
+                  styles.japanSignatureSection,
+                ]
+              : styles.signatureSection
+          }
           wrap={false}
         >
           <View style={styles.signatureBox}>
@@ -1567,14 +1551,28 @@ export default function ProformaInvoicePdf({
 
             <Image
               src={publicAsset(assets.stamp)}
-              style={styles.stampImage}
+              style={
+                isJapan
+                  ? [
+                      styles.stampImage,
+                      styles.japanStampImage,
+                    ]
+                  : styles.stampImage
+              }
             />
 
             <Image
               src={publicAsset(
                 assets.signature,
               )}
-              style={styles.signatureImage}
+              style={
+                isJapan
+                  ? [
+                      styles.signatureImage,
+                      styles.japanSignatureImage,
+                    ]
+                  : styles.signatureImage
+              }
             />
 
             <Text style={styles.signatureLine}>

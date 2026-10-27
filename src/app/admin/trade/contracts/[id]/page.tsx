@@ -1,5 +1,7 @@
 "use client";
 
+import SavedContractsButton from "../../../../../components/trade/SavedContractsButton";
+
 import Link from "next/link";
 
 import { type ReactNode, useEffect, useState } from "react";
@@ -155,6 +157,7 @@ export default function ContractDetailPage() {
     }
   }
 
+
   async function handlePreviewProformaInvoice() {
     if (!contract) {
       return;
@@ -291,6 +294,7 @@ export default function ContractDetailPage() {
         "Reopen this contract as Draft?",
       confirmed:
         "Confirm this contract? You can still edit it later, but it will be marked as confirmed.",
+      completed: "Completed",
       cancelled:
         "Cancel this contract? The contract and shipment data will be kept.",
     };
@@ -400,7 +404,7 @@ export default function ContractDetailPage() {
 
           <div className="flex flex-wrap gap-3">
             <Link
-              href={`/admin/trade/contracts/${contract.id}/edit`}
+              href={`/admin/trade/new?editId=${contract.id}&businessType=${contract.businessType}&customerId=${contract.customerId}&productId=${contract.productId}`}
               className="rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-black/5"
             >
               Edit Contract
@@ -464,6 +468,7 @@ export default function ContractDetailPage() {
             >
               Back
             </Link>
+            <SavedContractsButton />
           </div>
         </div>
       </header>
@@ -857,7 +862,7 @@ export default function ContractDetailPage() {
                 Check the PDF in a new tab before downloading it.
               </p>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <button
                   type="button"
                   onClick={handlePreviewSalesContract}
@@ -1063,6 +1068,7 @@ function ContractStatusBadge({
       "bg-amber-100 text-amber-800",
     confirmed:
       "bg-emerald-100 text-emerald-800",
+      completed: "bg-blue-100 text-blue-700",
     cancelled:
       "bg-red-100 text-red-700",
   };
@@ -1073,6 +1079,7 @@ function ContractStatusBadge({
   > = {
     draft: "Draft",
     confirmed: "Confirmed",
+    completed: "Completed",
     cancelled: "Cancelled",
   };
 

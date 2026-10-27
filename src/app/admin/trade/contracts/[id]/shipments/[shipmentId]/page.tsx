@@ -1,5 +1,7 @@
 "use client";
 
+import SavedContractsButton from "../../../../../../../components/trade/SavedContractsButton";
+
 import Link from "next/link";
 
 import {
@@ -303,6 +305,12 @@ export default function ShipmentDetailPage() {
       null,
     );
 
+  // Keep the amount as text while typing, so "125." remains editable.
+  const [
+    actualAmountReceivedInput,
+    setActualAmountReceivedInput,
+  ] = useState("");
+
   const [
     loaded,
     setLoaded,
@@ -484,10 +492,8 @@ export default function ShipmentDetailPage() {
       : calculatedPurchaseAmount;
 
   const commissionAmount =
-    Number(
-      displayedShipment
-        ?.commissionAmount,
-    ) || 0;
+    totalNetWeight *
+    (Number(contract?.commissionPerMt) || 0);
 
   const otherAdjustment =
     Number(
@@ -739,12 +745,19 @@ export default function ShipmentDetailPage() {
       cloneShipment(shipment),
     );
 
+    setActualAmountReceivedInput(
+      shipment.actualAmountReceived == null
+        ? ""
+        : String(shipment.actualAmountReceived),
+    );
+
     setValidationErrors([]);
     setIsEditing(true);
   }
 
   function handleCancelEditing() {
     setDraftShipment(null);
+    setActualAmountReceivedInput("");
     setValidationErrors([]);
     setIsEditing(false);
   }
@@ -1146,9 +1159,21 @@ export default function ShipmentDetailPage() {
           ) || 0,
 
         commissionAmount:
-          Number(
-            draftShipment.commissionAmount,
-          ) || 0,
+          draftShipment.containers.reduce(
+            (total, container) => {
+              const netWeightInput = (
+                container.netWeightInput ??
+                String(container.netWeight ?? "")
+              ).trim();
+
+              return (
+                total +
+                normalizeNumber(netWeightInput) *
+                  (Number(contract?.commissionPerMt) || 0)
+              );
+            },
+            0,
+          ),
 
         otherAdjustment:
           Number(
@@ -1461,7 +1486,9 @@ export default function ShipmentDetailPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <SavedContractsButton />
+
             {!isEditing ? (
               <>
                 <button
@@ -1660,22 +1687,26 @@ export default function ShipmentDetailPage() {
                 <input
                   type="text"
                   inputMode="decimal"
-                  value={
-                    draftShipment.actualAmountReceived ??
-                    ""
-                  }
+                  value={actualAmountReceivedInput}
                   onChange={(event) => {
-                    const cleanedValue =
-                      event.target.value
-                        .replace(/[^0-9.]/g, "")
-                        .replace(
-                          /^0+(?=\d)/,
-                          "",
-                        );
+                    let cleanedValue =
+                      event.target.value.replace(/[^0-9.]/g, "");
 
+                    // Keep only the first decimal point.
+                    const dotIndex = cleanedValue.indexOf(".");
+                    if (dotIndex !== -1) {
+                      cleanedValue =
+                        cleanedValue.slice(0, dotIndex + 1) +
+                        cleanedValue.slice(dotIndex + 1).replace(/\./g, "");
+                    }
+
+                    // Preserve the user's exact typing, including a trailing dot.
+                    setActualAmountReceivedInput(cleanedValue);
+
+                    // Store a numeric value in the existing shipment record.
                     updateDraftField(
                       "actualAmountReceived",
-                      cleanedValue === ""
+                      cleanedValue === "" || cleanedValue === "."
                         ? undefined
                         : Number(cleanedValue),
                     );

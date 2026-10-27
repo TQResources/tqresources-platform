@@ -10,6 +10,7 @@ import {
 
 import type { SavedContractDraft } from "../../data/trade/storage";
 import { getCustomerById } from "../../data/trade/customers";
+import { TradePdfHeader } from "./TradePdfHeader";
 
 type SalesContractPdfProps = {
   contract: SavedContractDraft;
@@ -113,6 +114,7 @@ const styles = StyleSheet.create({
 
   japanCompanyBlock: {
     width: "60%",
+    minHeight: 58,
     alignItems: "flex-start",
   },
 
@@ -124,34 +126,40 @@ const styles = StyleSheet.create({
   },
 
   japanContactLine: {
+    marginTop: "auto",
     fontSize: 6.55,
     color: COLORS.muted,
     textAlign: "left",
-    lineHeight: 1.28,
-    marginTop: 2,
+    lineHeight: 1.2,
   },
 
   japanLogoBlock: {
     width: "37%",
+    minHeight: 58,
     alignItems: "flex-end",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     paddingTop: 0,
-    marginTop: -5,
+    marginTop: 0,
   },
 
   japanLogo: {
-    width: 154,
-    height: 46,
+    width: 108,
+    height: 31,
     objectFit: "contain",
     objectPosition: "right center",
   },
 
+  japanLogoContacts: {
+    marginTop: "auto",
+    alignItems: "flex-end",
+  },
+
   japanLogoContact: {
-    marginTop: 2,
+    marginTop: 1,
     fontSize: 6.25,
     color: COLORS.muted,
     textAlign: "right",
-    lineHeight: 1.2,
+    lineHeight: 1.12,
   },
 
   japaneseSubtitle: {
@@ -170,21 +178,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    minHeight: 66,
-    paddingBottom: 10,
-    borderBottomWidth: 1.1,
+    minHeight: 58,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
     borderBottomColor: COLORS.accent,
   },
 
   logoBlock: {
     width: "36%",
-    justifyContent: "center",
-    paddingTop: 2,
+    justifyContent: "flex-start",
+    paddingTop: 0,
   },
 
   logo: {
-    width: 168,
-    height: 51,
+    width: 112,
+    height: 34,
     objectFit: "contain",
     objectPosition: "left center",
   },
@@ -261,7 +269,7 @@ japaneseDocumentType: {
 },
 
 title: {
-  fontSize: 23,
+  fontSize: 17.5,
   fontWeight: 700,
   color: COLORS.ink,
   letterSpacing: 0.45,
@@ -269,7 +277,7 @@ title: {
 },
 
 metaBox: {
-  width: "29%",
+  width: "32%",
   alignItems: "flex-end",
 },
 
@@ -281,19 +289,17 @@ metaRow: {
 },
 
 metaLabel: {
-  width: 64,
+  width: 58,
   textAlign: "right",
-  position: "relative",
-  left: 42,
   fontSize: 6.2,
   fontWeight: 700,
   color: COLORS.muted,
   letterSpacing: 0.25,
-  marginRight: 7,
+  marginRight: 2,
 },
 
 metaValue: {
-  width: 118,
+  width: 108,
   textAlign: "right",
   fontSize: 7.5,
   fontWeight: 700,
@@ -557,10 +563,17 @@ metaValue: {
 
   /* Signatures */
 
+  japanSignatureSection: {
+    marginTop: "auto",
+    paddingTop: 6,
+    borderTopWidth: 0,
+    borderTopColor: COLORS.white,
+  },
+
   signatureSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 11,
+    marginTop: "auto",
     paddingTop: 9,
     borderTopWidth: 0.8,
     borderTopColor: COLORS.ink,
@@ -569,7 +582,7 @@ metaValue: {
   signatureBox: {
     position: "relative",
     width: "45%",
-    height: 104,
+    height: 118,
   },
 
   signatureRole: {
@@ -587,19 +600,33 @@ metaValue: {
     maxWidth: 215,
   },
 
+  japanStampImage: {
+    left: 12,
+    bottom: 10,
+    width: 72,
+    height: 72,
+  },
+
   stampImage: {
     position: "absolute",
-    left: 16,
-    bottom: 12,
-    width: 58,
-    height: 58,
+    left: 14,
+    bottom: 10,
+    width: 72,
+    height: 72,
     objectFit: "contain",
+  },
+
+  japanSignatureImage: {
+    left: 94,
+    bottom: 27,
+    width: 83,
+    height: 33,
   },
 
   signatureImage: {
     position: "absolute",
-    left: 88,
-    bottom: 25,
+    left: 96,
+    bottom: 27,
     width: 83,
     height: 33,
     objectFit: "contain",
@@ -716,7 +743,7 @@ function addressLinesFromCustomer(
   fallback: string,
 ) {
   if (customer) {
-    return [
+    const address = [
       customer.address.line1,
       customer.address.line2,
       customer.address.city,
@@ -724,16 +751,19 @@ function addressLinesFromCustomer(
       customer.address.country,
     ]
       .map((item) => item?.trim())
-      .filter(
-        (item): item is string =>
-          Boolean(item),
-      );
+      .filter((item): item is string => Boolean(item))
+      .join(", ");
+
+    return address ? [address] : [];
   }
 
-  return fallback
+  const address = fallback
     .split(/\r?\n|,/)
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .join(", ");
+
+  return address ? [address] : [];
 }
 
 function addressLinesFromText(value: string) {
@@ -758,7 +788,10 @@ function DetailRow({
 
       <View style={styles.detailValue}>
         {lines.map((line, index) => (
-          <Text key={`${label}-${index}`}>
+          <Text
+            key={`${label}-${index}`}
+            hyphenationCallback={(word) => [word]}
+          >
             {upper(line)}
           </Text>
         ))}
@@ -899,10 +932,25 @@ export default function SalesContractPdf({
       ? "ALUMINIUM ALLOY"
       : upper(contract.material);
 
+  const isPtAlumindoUsaSows =
+    contract.customerId === "pt-alumindo-alloy-abadi" &&
+    contract.productId === "usa-aluminum-sows";
+
   const paymentText =
-    `${contract.depositRate}% DEPOSIT BY T/T AND ` +
-    `${100 - contract.depositRate}% BALANCE BY T/T ` +
-    "IN ACCORDANCE WITH THE AGREED TERMS.";
+    isPtAlumindoUsaSows
+      ? (
+          contract.paymentTerms?.trim() ||
+          (`${contract.depositRate}% DEPOSIT BY T/T AND ` +
+            `${100 - contract.depositRate}% BALANCE BY T/T ` +
+            "IN ACCORDANCE WITH THE AGREED TERMS.")
+        ).replace(
+          " After receiving the full payment, the seller should do telex release.",
+          "",
+        )
+      : contract.paymentTerms?.trim() ||
+        (`${contract.depositRate}% DEPOSIT BY T/T AND ` +
+          `${100 - contract.depositRate}% BALANCE BY T/T ` +
+          "IN ACCORDANCE WITH THE AGREED TERMS.");
 
   return (
     <Document
@@ -916,101 +964,11 @@ export default function SalesContractPdf({
   style={[styles.page, isJapan ? styles.japanesePage : {}]}
 >
         {/* Header */}
-
-        <View style={styles.header}>
-          {isJapan ? (
-            <>
-              <View style={styles.japanCompanyBlock}>
-                <Text style={styles.companyName}>
-                  {seller.name}
-                </Text>
-                <Text style={styles.companyName}>
-                  {JAPAN_SELLER.localName}
-                </Text>
-
-                {seller.headerAddressLines.map((line, index) => (
-                  <Text
-                    key={`header-address-${index}`}
-                    style={styles.japanCompanyAddress}
-                  >
-                    {index === 0 ? (
-                      <Text style={styles.companyContactLabel}>
-                        ADDRESS:{" "}
-                      </Text>
-                    ) : null}
-                    {line}
-                  </Text>
-                ))}
-
-                <Text style={styles.japanContactLine}>
-                  <Text style={styles.companyContactLabel}>
-                    TEL:{" "}
-                  </Text>
-                  {seller.telephone}
-                </Text>
-              </View>
-
-              <View style={styles.japanLogoBlock}>
-                <Image
-                  src={publicAsset(assets.logo)}
-                  style={styles.japanLogo}
-                />
-                <Text style={styles.japanLogoContact}>
-                  <Text style={styles.companyContactLabel}>
-                    EMAIL:{" "}
-                  </Text>
-                  {seller.email}
-                </Text>
-                <Text style={styles.japanLogoContact}>
-                  <Text style={styles.companyContactLabel}>
-                    WEBSITE:{" "}
-                  </Text>
-                  {seller.website}
-                </Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.logoBlock}>
-                <Image
-                  src={publicAsset(assets.logo)}
-                  style={styles.logo}
-                />
-              </View>
-
-              <View style={styles.companyBlock}>
-                <Text style={styles.companyName}>
-                  {seller.name}
-                </Text>
-
-                {seller.headerAddressLines.map((line, index) => (
-                  <Text
-                    key={`header-address-${index}`}
-                    style={styles.companyAddress}
-                  >
-                    <Text style={styles.companyContactLabel}>
-                      {index === 0 ? "ADDRESS: " : ""}
-                    </Text>
-                    {line}
-                  </Text>
-                ))}
-
-                <Text style={styles.companyContactLine}>
-                  <Text style={styles.companyContactLabel}>TEL: </Text>
-                  {seller.telephone}
-                  {"   ·   "}
-                  <Text style={styles.companyContactLabel}>EMAIL: </Text>
-                  {seller.email}
-                </Text>
-
-                <Text style={styles.companyContactLine}>
-                  <Text style={styles.companyContactLabel}>WEBSITE: </Text>
-                  {seller.website}
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
+        <TradePdfHeader
+          seller={seller}
+          logoSrc={publicAsset(assets.logo)}
+          isJapan={isJapan}
+        />
 
         {/* Centered title */}
 
@@ -1099,14 +1057,6 @@ export default function SalesContractPdf({
               lines={buyerAddressLines}
             />
 
-            {customer?.registrationNumber ? (
-              <DetailRow
-                label="TAX ID"
-                lines={[
-                  customer.registrationNumber,
-                ]}
-              />
-            ) : null}
 
             {activeContact?.phone ? (
               <DetailRow
@@ -1133,17 +1083,7 @@ export default function SalesContractPdf({
                   )}
                 </Text>
 
-                {!contract.consigneeSameAsBuyer
-                  ? consigneeAddressLines.map(
-                      (line, index) => (
-                        <Text
-                          key={`consignee-${index}`}
-                        >
-                          {upper(line)}
-                        </Text>
-                      ),
-                    )
-                  : null}
+
               </View>
             </View>
           </View>
@@ -1320,7 +1260,14 @@ export default function SalesContractPdf({
 
         {/* Signatures */}
 
-        <View style={styles.signatureSection}>
+        <View style={
+            isJapan
+              ? [
+                  styles.signatureSection,
+                  styles.japanSignatureSection,
+                ]
+              : styles.signatureSection
+          }>
           <View style={styles.signatureBox}>
             <Text style={styles.signatureRole}>
               FOR AND ON BEHALF OF THE SELLER
@@ -1334,14 +1281,28 @@ export default function SalesContractPdf({
 
             <Image
               src={publicAsset(assets.stamp)}
-              style={styles.stampImage}
+              style={
+                isJapan
+                  ? [
+                      styles.stampImage,
+                      styles.japanStampImage,
+                    ]
+                  : styles.stampImage
+              }
             />
 
             <Image
               src={publicAsset(
                 assets.signature,
               )}
-              style={styles.signatureImage}
+              style={
+                isJapan
+                  ? [
+                      styles.signatureImage,
+                      styles.japanSignatureImage,
+                    ]
+                  : styles.signatureImage
+              }
             />
 
             <Text style={styles.signatureLine}>

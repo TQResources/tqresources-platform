@@ -1,5 +1,7 @@
 "use client";
 
+import SavedContractsButton from "../../../../../../../components/trade/SavedContractsButton";
+
 import Link from "next/link";
 import {
   useEffect,
@@ -72,6 +74,7 @@ function createEmptyContainer():
     containerNumber: "",
     packages: 0,
     netWeight: 0,
+    netWeightInput: "",
   };
 }
 
@@ -477,6 +480,20 @@ export default function NewShipmentPage() {
       0,
     );
 
+  function normalizeDecimalInput(
+    value: string,
+  ) {
+    const normalized =
+      value
+        .replace(/[^0-9.]/g, "")
+        .replace(
+          /(\..*)\./g,
+          "$1",
+        );
+
+    return normalized;
+  }
+
   function updateContainer(
     containerId: string,
     field:
@@ -498,20 +515,36 @@ export default function NewShipmentPage() {
               return container;
             }
 
-            if (
-              field ===
-                "packages" ||
-              field ===
-                "netWeight" ||
-              field ===
-                "grossWeight"
-            ) {
+            if (field === "netWeight") {
               return {
                 ...container,
+                netWeight:
+                  value === ""
+                    ? 0
+                    : Number(value),
+                netWeightInput:
+                  value,
+              };
+            }
 
-                [field]:
+            if (field === "grossWeight") {
+              return {
+                ...container,
+                grossWeight:
                   value === ""
                     ? undefined
+                    : Number(value),
+                grossWeightInput:
+                  value,
+              };
+            }
+
+            if (field === "packages") {
+              return {
+                ...container,
+                packages:
+                  value === ""
+                    ? 0
                     : Number(value),
               };
             }
@@ -805,6 +838,19 @@ export default function NewShipmentPage() {
           ? appliedClaim
           : undefined,
 
+      purchaseUnitPrice:
+        Number(
+          contract.purchaseUnitPrice,
+        ) || 0,
+
+      commissionAmount:
+        totalNetWeight *
+        (
+          Number(
+            contract.commissionPerMt,
+          ) || 0
+        ),
+
       containers:
         containers.map(
           (container) => ({
@@ -829,15 +875,35 @@ export default function NewShipmentPage() {
               container.netWeight,
             ),
 
+            netWeightInput:
+              typeof container.netWeightInput === "string"
+                ? container.netWeightInput.trim()
+                : String(container.netWeight),
+
             grossWeight:
-              container.grossWeight ===
-                undefined ||
-              container.grossWeight ===
-                null
-                ? undefined
-                : Number(
-                    container.grossWeight,
-                  ),
+              container.grossWeightInput?.trim()
+                ? Number(
+                    container.grossWeightInput,
+                  )
+                : container.grossWeight ===
+                    undefined ||
+                  container.grossWeight ===
+                    null
+                  ? undefined
+                  : Number(
+                      container.grossWeight,
+                    ),
+            grossWeightInput:
+              typeof container.grossWeightInput === "string"
+                ? container.grossWeightInput.trim()
+                : container.grossWeight ===
+                    undefined ||
+                  container.grossWeight ===
+                    null
+                  ? undefined
+                  : String(
+                      container.grossWeight,
+                    ),
           }),
         ),
 
@@ -931,14 +997,18 @@ export default function NewShipmentPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/40">
-              Commercial Invoice
-            </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/40">
+                Commercial Invoice
+              </p>
 
-            <p className="mt-1 text-xl font-semibold">
-              {commercialInvoiceNumber}
-            </p>
+              <p className="mt-1 text-xl font-semibold">
+                {commercialInvoiceNumber}
+              </p>
+            </div>
+
+            <SavedContractsButton />
           </div>
         </div>
 
@@ -1256,12 +1326,13 @@ export default function NewShipmentPage() {
                           </span>
 
                           <input
-                            type="number"
-                            min="0"
-                            step="0.001"
+                            type="text"
+                            inputMode="decimal"
                             value={
-                              container.netWeight ||
-                              ""
+                              container.netWeightInput ??
+                              String(
+                                container.netWeight ?? "",
+                              )
                             }
                             onChange={(
                               event,
@@ -1269,10 +1340,12 @@ export default function NewShipmentPage() {
                               updateContainer(
                                 container.id,
                                 "netWeight",
-                                event.target
-                                  .value,
+                                normalizeDecimalInput(
+                                  event.target.value,
+                                ),
                               )
                             }
+                            placeholder="25.180"
                             className="mt-2 w-full rounded-xl border border-black/15 bg-white px-4 py-3 outline-none focus:border-black"
                           />
                         </label>
@@ -1291,11 +1364,10 @@ export default function NewShipmentPage() {
                             </span>
 
                             <input
-                              type="number"
-                              min="0"
-                              step="0.001"
+                              type="text"
+                              inputMode="decimal"
                               value={
-                                container.grossWeight ??
+                                container.grossWeightInput ??
                                 ""
                               }
                               onChange={(
@@ -1304,12 +1376,13 @@ export default function NewShipmentPage() {
                                 updateContainer(
                                   container.id,
                                   "grossWeight",
-                                  event
-                                    .target
-                                    .value,
+                                  normalizeDecimalInput(
+                                    event.target.value,
+                                  ),
                                 )
                               }
                               placeholder={`Default: ${
+                                container.netWeightInput ||
                                 container.netWeight ||
                                 0
                               }`}

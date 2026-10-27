@@ -1,0 +1,179 @@
+/**
+ * Supplier Payment
+ *
+ * Records payments made to suppliers for a contract.
+ *
+ * Important:
+ * - Buyer payment logic is not changed.
+ * - Supplier Deposit Paid is entered manually.
+ * - Supplier Bank Fee is entered manually.
+ * - Supplier Deposit is allocated across the contract's total containers.
+ * - Supplier Bank Fee is NOT allocated to individual CIs.
+ *   It is deducted only at contract-level profit calculation.
+ */
+
+export interface SupplierPaymentRecord {
+  id: string;
+
+  /**
+   * Contract this payment belongs to.
+   */
+  contractId: string;
+
+  /**
+   * Supplier information copied from the contract.
+   */
+  supplierPartnerId?: string;
+  supplierLegalName?: string;
+  supplierShortName?: string;
+
+  /**
+   * Supplier Deposit actually paid.
+   *
+   * This is a manual input at contract level.
+   */
+  supplierDepositPaid: number;
+
+  /**
+   * Supplier bank fee actually paid.
+   *
+   * This is a manual input at contract level.
+   *
+   * IMPORTANT:
+   * This amount must NOT be allocated to individual CIs.
+   * It is deducted only from the contract-level profit.
+   */
+  supplierBankFee: number;
+
+  /**
+   * Currency used for the supplier payment.
+   */
+  currency: string;
+
+  /**
+   * Payment date.
+   */
+  paymentDate?: string;
+
+  /**
+   * Optional bank/payment reference.
+   */
+  paymentReference?: string;
+
+  /**
+   * Optional note.
+   */
+  note?: string;
+
+  /**
+   * Record creation/update timestamps.
+   */
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * One contract container's allocated supplier deposit.
+ *
+ * Example:
+ * Contract has 4 containers
+ * Supplier Deposit Paid = USD 40,000
+ *
+ * Each container:
+ * USD 40,000 / 4 = USD 10,000
+ */
+export interface SupplierDepositAllocation {
+  contractId: string;
+  containerIndex: number;
+  totalContainers: number;
+  allocatedDeposit: number;
+}
+
+/**
+ * Create a new Supplier Payment record.
+ */
+export function createSupplierPaymentRecord(
+  input: Omit<
+    SupplierPaymentRecord,
+    "id" | "createdAt" | "updatedAt"
+  >,
+): SupplierPaymentRecord {
+  const now = new Date().toISOString();
+
+  return {
+    ...input,
+    id: `supplier-payment-${Date.now()}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/**
+ * Calculate the supplier deposit allocated to each container.
+ *
+ * Supplier Deposit is divided equally by the total number
+ * of containers in the contract.
+ *
+ * Bank Fee is deliberately NOT included here.
+ */
+export function calculateSupplierDepositPerContainer(
+  supplierDepositPaid: number,
+  totalContainers: number,
+): number {
+  if (!Number.isFinite(supplierDepositPaid)) {
+    return 0;
+  }
+
+  if (!Number.isFinite(totalContainers) || totalContainers <= 0) {
+    return 0;
+  }
+
+  return supplierDepositPaid / totalContainers;
+}
+
+/**
+ * Build the allocation list for all containers.
+ */
+export function buildSupplierDepositAllocations(
+  contractId: string,
+  supplierDepositPaid: number,
+  totalContainers: number,
+): SupplierDepositAllocation[] {
+  if (!contractId || totalContainers <= 0) {
+    return [];
+  }
+
+  const allocatedDeposit = calculateSupplierDepositPerContainer(
+    supplierDepositPaid,
+    totalContainers,
+  );
+
+  return Array.from({ length: totalContainers }, (_, index) => ({
+    contractId,
+    containerIndex: index + 1,
+    totalContainers,
+    allocatedDeposit,
+  }));
+}
+
+/**
+ * Calculate the supplier payment balance.
+ *
+ * This helper is intentionally kept simple.
+ * The actual purchase amount remains based on the existing
+ * contract/shipment purchase calculation.
+ */
+export function calculateSupplierBalanceDue(
+  purchaseAmount: number,
+  supplierDepositPaid: number,
+): number {
+  const purchase = Number.isFinite(purchaseAmount)
+    ? purchaseAmount
+    : 0;
+
+  const deposit = Number.isFinite(supplierDepositPaid)
+    ? supplierDepositPaid
+    : 0;
+
+  return Math.max(0, purchase - deposit);
+}

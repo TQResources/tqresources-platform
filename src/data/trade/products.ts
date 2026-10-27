@@ -57,15 +57,13 @@ export const products: ProductProfile[] = [
   },
 
   {
-    id: "zinc-ingot-99995",
+    id: "zinc-ingot",
 
-    name: "Zinc Ingot 99.995%",
+    name: "Zinc Ingots",
 
-    invoiceName:
-      "Special High Grade Zinc Ingots",
+    invoiceName: "Zinc Ingots",
 
-    contractName:
-      "Special High Grade Zinc Ingots, Zn 99.995% Min",
+    contractName: "Zinc Ingots",
 
     category: "zinc",
 
@@ -73,7 +71,7 @@ export const products: ProductProfile[] = [
 
     originCountry: "",
 
-    standard: "SHG Zinc",
+    standard: "",
 
     defaultSettings: {
       unit: "MT",
@@ -88,28 +86,7 @@ export const products: ProductProfile[] = [
         "Quality and quantity shall be determined at the port of loading.",
 
       qualityDescription:
-        "Zinc purity: Zn 99.995% minimum.",
-
-      analysisSpecifications: [
-        {
-          element: "Zn",
-          minimum: 99.995,
-          unit: "%",
-          displayValue: "99.995% Min",
-        },
-        {
-          element: "Pb",
-          maximum: 0.003,
-          unit: "%",
-          displayValue: "0.003% Max",
-        },
-        {
-          element: "Cd",
-          maximum: 0.003,
-          unit: "%",
-          displayValue: "0.003% Max",
-        },
-      ],
+        "Zinc content as specified in the individual sales contract.",
     },
 
     active: true,
@@ -184,6 +161,45 @@ contractName: "ALUMINIUM ALLOY",
   active: true,
 
 },
+
+  {
+    id: "off-grade-aluminum-alloy-ingot",
+
+    name: "Off Grade Aluminum Alloy Ingot",
+
+    invoiceName:
+      "OFF GRADE ALUMINUM ALLOY INGOT",
+
+    contractName:
+      "OFF GRADE ALUMINUM ALLOY INGOT",
+
+    category: "aluminum",
+
+    hsCode: "76012000",
+
+    originCountry: "Nigeria",
+
+    standard: "AK5M2 Offgrade",
+
+    defaultSettings: {
+      unit: "MT",
+
+      packaging:
+        "Packed in bundles suitable for international shipment.",
+
+      quantityTolerance:
+        "±10%",
+
+      inspectionTerms:
+        "Quality and quantity shall be determined at the port of loading.",
+
+      qualityDescription:
+        "Off grade aluminum alloy ingots complying with the mutually agreed chemical composition and specifications.",
+    },
+
+    active: true,
+  },
+
 ];
 
 export function getProductById(

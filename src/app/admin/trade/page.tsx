@@ -287,6 +287,13 @@ export default function TradeAdminPage() {
             </Link>
 
             <Link
+              href="/admin/trade/reports"
+              className="rounded-lg border border-black/15 px-4 py-2 text-sm font-semibold transition hover:bg-black hover:text-white"
+            >
+              Reports
+            </Link>
+
+            <Link
               href="/"
               className="rounded-lg border border-black/15 px-4 py-2 text-sm font-medium transition hover:bg-black hover:text-white"
             >
@@ -296,10 +303,10 @@ export default function TradeAdminPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 pt-8">
+      <div className="mx-auto grid max-w-7xl gap-5 px-6 pt-8 lg:grid-cols-2">
         <Link
           href="/admin/trade/contracts"
-          className="group flex flex-col justify-between gap-5 rounded-2xl border border-black/10 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-black/20 hover:shadow-md sm:flex-row sm:items-center"
+          className="group flex flex-col justify-between gap-5 rounded-2xl border border-black/10 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-black/20 hover:shadow-md"
         >
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-black/45">
@@ -311,12 +318,37 @@ export default function TradeAdminPage() {
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-black/55">
-              View existing contracts, edit details, manage shipments and generate PDFs.
+              View existing contracts, edit details,
+              manage shipments and generate PDFs.
             </p>
           </div>
 
-          <span className="shrink-0 rounded-xl bg-[#253A4A] px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-[#1d303e]">
+          <span className="mt-2 w-fit rounded-xl bg-[#253A4A] px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-[#1d303e]">
             View Contracts →
+          </span>
+        </Link>
+
+        <Link
+          href="/admin/trade/reports"
+          className="group flex flex-col justify-between gap-5 rounded-2xl border border-black/10 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-black/20 hover:shadow-md"
+        >
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-black/45">
+              Business Review
+            </p>
+
+            <h2 className="mt-2 text-2xl font-semibold">
+              Reports
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-black/55">
+              Open the monthly contract summary and
+              CI profit summary.
+            </p>
+          </div>
+
+          <span className="mt-2 w-fit rounded-xl bg-[#253A4A] px-5 py-3 text-sm font-semibold text-white transition group-hover:bg-[#1d303e]">
+            View Reports →
           </span>
         </Link>
       </div>

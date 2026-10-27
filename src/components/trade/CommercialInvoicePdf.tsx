@@ -17,6 +17,7 @@ import {
 } from "../../data/trade/shipments";
 
 import { getCustomerById } from "../../data/trade/customers";
+import { TradePdfHeader } from "./TradePdfHeader";
 
 type CommercialInvoicePdfProps = {
   contract: SavedContractDraft;
@@ -72,7 +73,8 @@ const JAPAN_SELLER = {
 
 const HONG_KONG_BANK = {
   beneficiaryName: "TQ RESOURCES CO., LIMITED",
-  bankName: "THE HONGKONG AND SHANGHAI BANKING CORPORATION LIMITED",
+  bankName:
+    "THE HONGKONG AND SHANGHAI BANKING\nCORPORATION LIMITED",
   bankAddress: "1 QUEEN'S ROAD CENTRAL, HONG KONG",
   accountNumber: "841603210838",
   swiftCode: "HSBCHKHHHKH",
@@ -122,12 +124,36 @@ const styles = StyleSheet.create({
   },
 
   japanesePage: { fontFamily: "NotoSansJP" },
-  japanCompanyBlock: { width: "60%", alignItems: "flex-start" },
+  japanCompanyBlock: {
+    width: "60%",
+    minHeight: 58,
+    alignItems: "flex-start",
+  },
   japanCompanyAddress: { fontSize: 6.8, color: COLORS.muted, textAlign: "left", lineHeight: 1.28 },
-  japanContactLine: { fontSize: 6.55, color: COLORS.muted, textAlign: "left", lineHeight: 1.28, marginTop: 2 },
-  japanLogoBlock: { width: "37%", alignItems: "flex-end", justifyContent: "flex-start", marginTop: -5 },
-  japanLogo: { width: 154, height: 46, objectFit: "contain", objectPosition: "right center" },
-  japanLogoContact: { marginTop: 2, fontSize: 6.25, color: COLORS.muted, textAlign: "right", lineHeight: 1.2 },
+  japanContactLine: {
+    marginTop: "auto",
+    fontSize: 6.55,
+    color: COLORS.muted,
+    textAlign: "left",
+    lineHeight: 1.2,
+  },
+  japanLogoBlock: {
+    width: "37%",
+    minHeight: 58,
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    paddingTop: 0,
+    marginTop: 0,
+  },
+  japanLogo: { width: 108, height: 31, objectFit: "contain", objectPosition: "right center" },
+  japanLogoContacts: { marginTop: "auto", alignItems: "flex-end" },
+  japanLogoContact: {
+    marginTop: 1,
+    fontSize: 6.25,
+    color: COLORS.muted,
+    textAlign: "right",
+    lineHeight: 1.12,
+  },
 
   /* Header */
 
@@ -589,7 +615,7 @@ const styles = StyleSheet.create({
   bankPairRow: { flexDirection: "row", borderBottomWidth: 0.3, borderBottomColor: COLORS.border },
   bankPairHalf: { width: "50%", flexDirection: "row" },
   bankPairDivider: { borderRightWidth: 0.3, borderRightColor: COLORS.border },
-  bankPairLabel: { width: 92, justifyContent: "center", paddingHorizontal: 6, backgroundColor: COLORS.soft },
+  bankPairLabel: { width: 93, justifyContent: "center", paddingHorizontal: 6, paddingVertical: 4, backgroundColor: COLORS.soft },
   bankPairValue: { flex: 1, justifyContent: "center", paddingVertical: 4, paddingHorizontal: 7 },
 
   bankLastRow: {
@@ -627,8 +653,8 @@ const styles = StyleSheet.create({
   signatureSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
-    paddingTop: 0,
+    marginTop: "auto",
+    paddingTop: 8,
   },
 
   signatureBox: {
@@ -653,10 +679,10 @@ const styles = StyleSheet.create({
 
   stampImage: {
     position: "absolute",
-    left: 16,
-    bottom: 18,
-    width: 58,
-    height: 58,
+    left: 14,
+    bottom: 10,
+    width: 72,
+    height: 72,
     objectFit: "contain",
   },
 
@@ -740,14 +766,56 @@ function formatMoney(
   );
 }
 
+function getDecimalPlaces(
+  value: string | undefined,
+) {
+  const trimmedValue = value?.trim();
+
+  if (!trimmedValue) {
+    return 0;
+  }
+
+  const decimalIndex =
+    trimmedValue.indexOf(".");
+
+  if (decimalIndex < 0) {
+    return 0;
+  }
+
+  return Math.min(
+    trimmedValue.length -
+      decimalIndex -
+      1,
+    3,
+  );
+}
+
+function getNetWeightDecimalPlaces(
+  containers: ShipmentRecord["containers"],
+) {
+  return containers.reduce(
+    (maximum, container) =>
+      Math.max(
+        maximum,
+        getDecimalPlaces(
+          container.netWeightInput,
+        ),
+      ),
+    0,
+  );
+}
+
 function formatQuantity(
   value: number,
+  decimalPlaces: number,
 ) {
   return value.toLocaleString(
     "en-US",
     {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 3,
+      minimumFractionDigits:
+        decimalPlaces,
+      maximumFractionDigits:
+        decimalPlaces,
     },
   );
 }
@@ -801,32 +869,27 @@ function addressLinesFromCustomer(
   fallback: string,
 ) {
   if (customer) {
-    return [
+    const address = [
       customer.address.line1,
       customer.address.line2,
       customer.address.city,
       customer.address.postalCode,
       customer.address.country,
     ]
-      .map(
-        (item) =>
-          item?.trim(),
-      )
-      .filter(
-        (
-          item,
-        ): item is string =>
-          Boolean(item),
-      );
+      .map((item) => item?.trim())
+      .filter((item): item is string => Boolean(item))
+      .join(", ");
+
+    return address ? [address] : [];
   }
 
-  return fallback
+  const address = fallback
     .split(/\r?\n|,/)
-    .map(
-      (item) =>
-        item.trim(),
-    )
-    .filter(Boolean);
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .join(", ");
+
+  return address ? [address] : [];
 }
 
 function findPaymentTerm(
@@ -1127,6 +1190,11 @@ export default function CommercialInvoicePdf({
       shipment.containers,
     );
 
+  const quantityDecimalPlaces =
+    getNetWeightDecimalPlaces(
+      shipment.containers,
+    );
+
   const goodsAmount =
     calculateInvoiceAmount(
       shipment.containers,
@@ -1181,38 +1249,11 @@ export default function CommercialInvoicePdf({
         style={[styles.page, isJapan ? styles.japanesePage : {}]}
       >
         {/* Header */}
-        <View style={styles.header}>
-          {isJapan ? (
-            <>
-              <View style={styles.japanCompanyBlock}>
-                <Text style={styles.companyName}>{seller.name}</Text>
-                <Text style={styles.companyName}>{JAPAN_SELLER.localName}</Text>
-                {seller.headerAddressLines.map((line, index) => (
-                  <Text key={`header-address-${index}`} style={styles.japanCompanyAddress}>
-                    {index === 0 ? <Text style={styles.companyContactLabel}>ADDRESS: </Text> : null}
-                    {line}
-                  </Text>
-                ))}
-                <Text style={styles.japanContactLine}><Text style={styles.companyContactLabel}>TEL: </Text>{seller.telephone}</Text>
-              </View>
-              <View style={styles.japanLogoBlock}>
-                <Image src={publicAsset(assets.logo)} style={styles.japanLogo} />
-                <Text style={styles.japanLogoContact}><Text style={styles.companyContactLabel}>EMAIL: </Text>{seller.email}</Text>
-                <Text style={styles.japanLogoContact}><Text style={styles.companyContactLabel}>WEBSITE: </Text>{seller.website}</Text>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.logoBlock}><Image src={publicAsset(assets.logo)} style={styles.logo} /></View>
-              <View style={styles.companyBlock}>
-                <Text style={styles.companyName}>{seller.name}</Text>
-                {seller.headerAddressLines.map((line,index)=>(<Text key={`header-${index}`} style={styles.companyAddress}><Text style={styles.companyContactLabel}>{index===0?"ADDRESS: ":""}</Text>{line}</Text>))}
-                <Text style={styles.companyContactLine}><Text style={styles.companyContactLabel}>TEL: </Text>{seller.telephone}{"   ·   "}<Text style={styles.companyContactLabel}>EMAIL: </Text>{seller.email}</Text>
-                <Text style={styles.companyContactLine}><Text style={styles.companyContactLabel}>WEBSITE: </Text>{seller.website}</Text>
-              </View>
-            </>
-          )}
-        </View>
+        <TradePdfHeader
+          seller={seller}
+          logoSrc={publicAsset(assets.logo)}
+          isJapan={isJapan}
+        />
 
         {/* Title */}
         <View style={styles.titleSection}>
@@ -1591,6 +1632,7 @@ export default function CommercialInvoicePdf({
                 >
                   {`${formatQuantity(
                     quantity,
+                    quantityDecimalPlaces,
                   )} ${contract.unit}`}
                 </Text>
               </View>

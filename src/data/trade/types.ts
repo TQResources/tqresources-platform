@@ -182,6 +182,9 @@ export interface CustomerProfile {
 
   defaultSettings: CustomerDefaultSettings;
 
+  defaultConsigneeName?: string;
+  defaultConsigneeAddress?: string;
+
   notes?: string;
 
   active: boolean;
